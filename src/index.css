@@ -1,0 +1,211 @@
+@import "tailwindcss";
+
+@theme {
+  /* 主背景色 */
+  --color-dark-900: #0a0b0d;
+  --color-dark-800: #12141a;
+  --color-dark-700: #1a1d24;
+  --color-dark-600: #22262f;
+
+  /* 主色调 - 浅绿色 */
+  --color-primary: #00d395;
+  --color-primary-50: #e6fff7;
+  --color-primary-100: #b3ffe6;
+  --color-primary-200: #80ffd4;
+  --color-primary-300: #4dffc3;
+  --color-primary-400: #1affb1;
+  --color-primary-500: #00d395;
+  --color-primary-600: #00a676;
+  --color-primary-700: #007a57;
+  --color-primary-800: #004d38;
+  --color-primary-900: #002119;
+
+  /* 红色 - 用于下跌/卖出 */
+  --color-danger: #ff4757;
+  --color-danger-light: #ff6b7a;
+
+  /* 绿色 - 用于上涨/买入 */
+  --color-success: #00d395;
+  --color-success-light: #00e6a4;
+
+  /* 动画 */
+  --animate-fade-in: fadeIn 0.2s ease-out;
+  --animate-slide-up: slideUp 0.3s ease-out;
+  --animate-pulse-subtle: pulseSubtle 2s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes slideUp {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseSubtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  background-color: var(--color-dark-900);
+  color: #f3f4f6;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--color-dark-800);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-dark-600);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-dark-700);
+}
+
+/* 按钮基础样式 */
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease-out;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-dark-900);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-400);
+}
+
+.btn-primary:active {
+  transform: scale(0.95);
+}
+
+.btn-secondary {
+  background-color: var(--color-dark-700);
+  color: #f3f4f6;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-dark-600);
+}
+
+.btn-secondary:active {
+  transform: scale(0.95);
+}
+
+/* 卡片样式 */
+.card {
+  background-color: var(--color-dark-800);
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-dark-600);
+}
+
+/* 表格行悬浮效果 */
+.table-row-hover {
+  transition: background-color 0.15s;
+  cursor: pointer;
+}
+
+.table-row-hover:hover {
+  background-color: var(--color-dark-700);
+}
+
+/* 价格上涨/下跌颜色 */
+.price-up {
+  color: var(--color-success);
+}
+
+.price-down {
+  color: var(--color-danger);
+}
+
+/* 输入框样式 */
+.input {
+  background-color: var(--color-dark-700);
+  border: 1px solid var(--color-dark-600);
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  color: #f3f4f6;
+  transition: border-color 0.2s;
+}
+
+.input::placeholder {
+  color: #6b7280;
+}
+
+.input:focus {
+  outline: none;
+  border-color: rgba(0, 211, 149, 0.5);
+}
+
+/* 文字渐变 */
+.text-gradient {
+  background: linear-gradient(to right, var(--color-primary), var(--color-primary-300));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 玻璃效果 */
+.glass {
+  background-color: rgba(18, 20, 26, 0.8);
+  backdrop-filter: blur(24px);
+}
+
+/* 隐藏滚动条但保持滚动功能 */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* 数字等宽字体 */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 颜色工具类 */
+.text-success { color: var(--color-success); }
+.text-danger { color: var(--color-danger); }
+.text-primary { color: var(--color-primary); }
+.bg-primary { background-color: var(--color-primary); }
+.bg-dark-900 { background-color: var(--color-dark-900); }
+.bg-dark-800 { background-color: var(--color-dark-800); }
+.bg-dark-700 { background-color: var(--color-dark-700); }
+.bg-dark-600 { background-color: var(--color-dark-600); }
+.border-dark-600 { border-color: var(--color-dark-600); }
+.border-dark-700 { border-color: var(--color-dark-700); }

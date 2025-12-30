@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tailwindcss:*)",
+      "Bash(./node_modules/.bin/tailwindcss:*)",
+      "Bash(cat:*)",
+      "Bash(curl:*)",
+      "Bash(npm install:*)",
+      "Bash(pkill:*)",
+      "Bash(npm run build:*)"
+    ]
+  }
+}
