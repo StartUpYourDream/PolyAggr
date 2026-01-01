@@ -7,7 +7,12 @@
       "Bash(curl:*)",
       "Bash(npm install:*)",
       "Bash(pkill:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npx tsc:*)",
+      "Bash(while read file)",
+      "Bash(do if grep -l '[一-龥]' \"$file\")",
+      "Bash(then echo \"$file has Chinese text\" fi done)"
     ]
   }
 }

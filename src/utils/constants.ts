@@ -71,9 +71,9 @@ export const DEFAULT_GAP_THRESHOLD = 0.05
 
 // 颜色
 export const COLORS = {
-  primary: '#00d395',
-  danger: '#ff4757',
-  success: '#00d395',
+  primary: '#3b82f6',
+  danger: '#ef4444',
+  success: '#10b981',
   dark900: '#0a0b0d',
   dark800: '#12141a',
   dark700: '#1a1d24',

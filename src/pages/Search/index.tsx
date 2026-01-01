@@ -3,8 +3,10 @@ import { motion } from 'framer-motion'
 import { useMemo } from 'react'
 import { useMarkets } from '../../hooks'
 import { formatCurrency, formatPercent } from '../../utils'
+import { useTranslation } from '../../i18n'
 
 export function Search() {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const query = searchParams.get('q') || ''
   const navigate = useNavigate()
@@ -53,10 +55,10 @@ export function Search() {
         className="mb-8"
       >
         <h1 className="text-3xl font-bold text-gray-100 mb-2">
-          Search Results
+          {t('search.searchResults')}
         </h1>
         <p className="text-gray-400">
-          {query ? `Showing results for "${query}"` : 'Enter a search query'}
+          {query ? `${t('search.resultsFor')} "${query}"` : t('search.enterKeyword')}
         </p>
       </motion.div>
 
@@ -70,9 +72,9 @@ export function Search() {
           {/* Events Section */}
           <div className="card p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-100">Events</h2>
+              <h2 className="text-lg font-semibold text-gray-100">{t('search.events')}</h2>
               <span className="text-sm text-gray-400">
-                {isLoading ? 'Searching...' : `${filteredMarkets.length} results`}
+                {isLoading ? t('search.searching') : `${filteredMarkets.length} ${t('search.results')}`}
               </span>
             </div>
 
@@ -127,7 +129,7 @@ export function Search() {
               </div>
             ) : (
               <div className="h-[100px] flex items-center justify-center text-gray-500">
-                No events found matching "{query}"
+                {t('search.noEventsFound')} "{query}" {t('search.matching')}
               </div>
             )}
           </div>
@@ -136,9 +138,9 @@ export function Search() {
           {isAddressQuery && (
             <div className="card p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-100">Users</h2>
+                <h2 className="text-lg font-semibold text-gray-100">{t('search.users')}</h2>
                 <span className="text-sm text-gray-400">
-                  {matchedUsers.length} result{matchedUsers.length !== 1 ? 's' : ''}
+                  {matchedUsers.length} {t('search.results')}
                 </span>
               </div>
 
@@ -163,13 +165,13 @@ export function Search() {
                           </div>
                           <div className="flex items-center gap-4 text-sm">
                             <span className="text-gray-400">
-                              Balance {formatCurrency(user.balance)}
+                              {t('search.balance')} {formatCurrency(user.balance)}
                             </span>
                             <span className={user.pnl >= 0 ? 'text-success' : 'text-danger'}>
-                              P&L {user.pnl >= 0 ? '+' : ''}{formatCurrency(user.pnl)}
+                              {t('user.pnl')} {user.pnl >= 0 ? '+' : ''}{formatCurrency(user.pnl)}
                             </span>
                             <span className={user.roi >= 0 ? 'text-success' : 'text-danger'}>
-                              ROI {formatPercent(user.roi)}
+                              {t('search.roi')} {formatPercent(user.roi)}
                             </span>
                           </div>
                         </div>
@@ -179,7 +181,7 @@ export function Search() {
                 </div>
               ) : (
                 <div className="h-[100px] flex items-center justify-center text-gray-500">
-                  No users found
+                  {t('search.noUsersFound')}
                 </div>
               )}
             </div>
@@ -189,7 +191,7 @@ export function Search() {
           {!isAddressQuery && query.length > 0 && (
             <div className="card p-4 bg-dark-700/50 border border-dark-600">
               <p className="text-sm text-gray-400">
-                💡 <span className="text-gray-300">Tip:</span> To search for users, enter a wallet address starting with "0x"
+                💡 <span className="text-gray-300">{t('search.tip')}</span> {t('search.tipMessage')}
               </p>
             </div>
           )}
@@ -206,11 +208,10 @@ export function Search() {
         >
           <div className="text-6xl mb-4">🔍</div>
           <h3 className="text-xl font-semibold text-gray-100 mb-2">
-            Start searching
+            {t('search.startSearching')}
           </h3>
           <p className="text-gray-400 max-w-md mx-auto">
-            Use the search bar above to find prediction markets or user profiles.
-            You can search by event name, keywords, or wallet addresses.
+            {t('search.searchDescription')}
           </p>
         </motion.div>
       )}

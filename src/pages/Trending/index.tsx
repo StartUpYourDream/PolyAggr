@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useMarkets } from '../../hooks'
 import { formatCurrency, formatPercent, formatCountdown, MARKET_CATEGORIES } from '../../utils'
 import type { Market } from '../../types'
+import { useTranslation } from '../../i18n'
 
 type SortField = 'volume' | 'oi' | 'oiChange' | 'bid' | 'ask' | 'change1h' | 'change24h' | 'name'
 type SortOrder = 'asc' | 'desc'
@@ -48,6 +49,7 @@ function calculateMarketMetrics(market: Market) {
 }
 
 export function Trending() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [sortField, setSortField] = useState<SortField>('volume')
@@ -128,9 +130,9 @@ export function Trending() {
     return (
       <div className="max-w-[1800px] mx-auto px-6 py-8">
         <div className="card p-8 text-center">
-          <div className="text-danger text-lg mb-2">Failed to load markets</div>
+          <div className="text-danger text-lg mb-2">{t('trending.loadError')}</div>
           <div className="text-gray-400">
-            {error instanceof Error ? error.message : 'Unknown error'}
+            {error instanceof Error ? error.message : t('trending.unknownError')}
           </div>
         </div>
       </div>
@@ -145,10 +147,10 @@ export function Trending() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-bold text-gray-100 mb-2">Trending Markets</h1>
+        <h1 className="text-3xl font-bold text-gray-100 mb-2">{t('trending.title')}</h1>
         <p className="text-gray-400">
-          Real-time prediction market data from Polymarket
-          {processedMarkets.length > 0 && ` · ${processedMarkets.length} markets`}
+          {t('trending.description')}
+          {processedMarkets.length > 0 && ` · ${processedMarkets.length} ${t('trending.markets')}`}
         </p>
       </motion.div>
 
@@ -160,13 +162,13 @@ export function Trending() {
         className="card p-4 mb-6"
       >
         <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-sm text-gray-400">Category:</span>
+          <span className="text-sm text-gray-400">{t('trending.category')}：</span>
           <div className="flex gap-2 flex-wrap">
             {MARKET_CATEGORIES.map(cat => (
               <button
                 key={cat.value}
                 onClick={() => setSelectedCategory(cat.value)}
-                className={`px-4 py-2 text-sm rounded-lg transition-all ${
+                className={`px-4 py-2 text-sm rounded-lg transition-all cursor-pointer active:scale-95 ${
                   selectedCategory === cat.value
                     ? 'bg-primary text-dark-900 font-medium'
                     : 'bg-dark-700 text-gray-300 hover:bg-dark-600 hover:text-gray-100'
@@ -183,7 +185,7 @@ export function Trending() {
       {isLoading && (
         <div className="card p-12 text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <div className="text-gray-400 mt-4">Loading markets...</div>
+          <div className="text-gray-400 mt-4">{t('trending.loadingMarkets')}</div>
         </div>
       )}
 
@@ -200,58 +202,58 @@ export function Trending() {
               <thead>
                 <tr className="border-b border-dark-600 text-left">
                   <th className="px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">
-                    Event
+                    {t('trending.event')}
                   </th>
                   <th className="px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">
-                    Category
+                    {t('trending.category')}
                   </th>
                   <th className="px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider text-right">
-                    YES
+                    {t('trending.yes')}
                   </th>
                   <th className="px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider text-right">
-                    NO
+                    {t('trending.no')}
                   </th>
                   <th
                     className="px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider text-right cursor-pointer hover:text-gray-200"
                     onClick={() => handleSort('volume')}
                   >
-                    24h Vol {sortField === 'volume' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    {t('stats.volume24h')} {sortField === 'volume' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
                   <th
                     className="px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider text-right cursor-pointer hover:text-gray-200"
                     onClick={() => handleSort('oi')}
                   >
-                    OI {sortField === 'oi' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    {t('stats.openInterest')} {sortField === 'oi' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
                   <th
                     className="px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider text-right cursor-pointer hover:text-gray-200"
                     onClick={() => handleSort('oiChange')}
                   >
-                    OI Chg {sortField === 'oiChange' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    {t('trending.oiChange')} {sortField === 'oiChange' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
                   <th
                     className="px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider text-right cursor-pointer hover:text-gray-200"
                     onClick={() => handleSort('bid')}
                   >
-                    Bid Depth {sortField === 'bid' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    {t('stats.bidDepth')} {sortField === 'bid' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
                   <th
                     className="px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider text-right cursor-pointer hover:text-gray-200"
                     onClick={() => handleSort('ask')}
                   >
-                    Ask Depth {sortField === 'ask' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    {t('stats.askDepth')} {sortField === 'ask' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
                   <th
                     className="px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider text-right cursor-pointer hover:text-gray-200"
                     onClick={() => handleSort('change1h')}
                   >
-                    1h {sortField === 'change1h' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    {t('trending.change1h')} {sortField === 'change1h' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
                   <th
                     className="px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider text-right cursor-pointer hover:text-gray-200"
                     onClick={() => handleSort('change24h')}
                   >
-                    24h {sortField === 'change24h' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    {t('trending.change24h')} {sortField === 'change24h' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </th>
                 </tr>
               </thead>
@@ -269,7 +271,7 @@ export function Trending() {
                       <div className="max-w-[300px]">
                         <p className="text-gray-100 font-medium truncate">{market.name}</p>
                         <p className="text-xs text-gray-500 mt-1">
-                          Ends {formatCountdown(market.endDate)}
+                          {t('trending.endsAt')} {formatCountdown(market.endDate)}
                         </p>
                       </div>
                     </td>
@@ -338,7 +340,7 @@ export function Trending() {
       {/* Empty State */}
       {!isLoading && processedMarkets.length === 0 && (
         <div className="card p-12 text-center">
-          <div className="text-gray-400">No markets found for this category</div>
+          <div className="text-gray-400">{t('trending.noMarketsFound')}</div>
         </div>
       )}
     </div>

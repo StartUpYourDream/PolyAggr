@@ -1,173 +1,209 @@
 import { motion } from 'framer-motion'
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import type { PriceHistory } from '../../types'
+import { formatTimestamp } from '../../utils/format'
+import { useTranslation } from '../../i18n'
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+} from 'recharts'
 
 interface PriceChartProps {
-  data: PriceHistory[]
+  data: PriceHistory[] | PriceHistory[][]  // Support single series or multiple series
   height?: number
+  multiLine?: boolean  // Whether to show multiple lines
+  lineColors?: string[]  // Colors for each line
 }
 
-export function PriceChart({ data, height = 400 }: PriceChartProps) {
+export function PriceChart({
+  data,
+  height = 400,
+  multiLine = false,
+  lineColors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
+}: PriceChartProps) {
+  const { t } = useTranslation()
   const [selectedInterval, setSelectedInterval] = useState('1d')
-  const [hoveredPoint, setHoveredPoint] = useState<{ x: number; y: number; price: number; time: number } | null>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
 
   const intervals = ['1s', '1m', '5m', '1h', '1d', '1w']
 
-  useEffect(() => {
-    if (!canvasRef.current || data.length === 0) return
+  // Check if data is empty
+  const isEmpty = multiLine
+    ? (Array.isArray(data) && (data.length === 0 || (data as PriceHistory[][]).every(series => series.length === 0)))
+    : (Array.isArray(data) && data.length === 0)
 
-    const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    // 设置画布尺寸
-    const rect = canvas.getBoundingClientRect()
-    canvas.width = rect.width * window.devicePixelRatio
-    canvas.height = rect.height * window.devicePixelRatio
-    ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
-
-    // 清空画布
-    ctx.clearRect(0, 0, rect.width, rect.height)
-
-    // 计算价格范围
-    const prices = data.map(d => d.p)
-    const minPrice = Math.min(...prices)
-    const maxPrice = Math.max(...prices)
-    const priceRange = maxPrice - minPrice || 0.1
-
-    // 绘制网格线
-    ctx.strokeStyle = '#22262f'
-    ctx.lineWidth = 1
-
-    // 水平网格线
-    for (let i = 0; i <= 5; i++) {
-      const y = (rect.height / 5) * i
-      ctx.beginPath()
-      ctx.moveTo(0, y)
-      ctx.lineTo(rect.width, y)
-      ctx.stroke()
-    }
-
-    // 垂直网格线
-    for (let i = 0; i <= 10; i++) {
-      const x = (rect.width / 10) * i
-      ctx.beginPath()
-      ctx.moveTo(x, 0)
-      ctx.lineTo(x, rect.height)
-      ctx.stroke()
-    }
-
-    // 绘制价格线
-    ctx.strokeStyle = '#00d395'
-    ctx.lineWidth = 2
-    ctx.beginPath()
-
-    data.forEach((point, index) => {
-      const x = (index / (data.length - 1)) * rect.width
-      const y = rect.height - ((point.p - minPrice) / priceRange) * rect.height
-
-      if (index === 0) {
-        ctx.moveTo(x, y)
-      } else {
-        ctx.lineTo(x, y)
-      }
-    })
-
-    ctx.stroke()
-
-    // 绘制渐变填充
-    const gradient = ctx.createLinearGradient(0, 0, 0, rect.height)
-    gradient.addColorStop(0, 'rgba(0, 211, 149, 0.2)')
-    gradient.addColorStop(1, 'rgba(0, 211, 149, 0)')
-
-    ctx.fillStyle = gradient
-    ctx.beginPath()
-
-    data.forEach((point, index) => {
-      const x = (index / (data.length - 1)) * rect.width
-      const y = rect.height - ((point.p - minPrice) / priceRange) * rect.height
-
-      if (index === 0) {
-        ctx.moveTo(x, y)
-      } else {
-        ctx.lineTo(x, y)
-      }
-    })
-
-    ctx.lineTo(rect.width, rect.height)
-    ctx.lineTo(0, rect.height)
-    ctx.closePath()
-    ctx.fill()
-
-    // 绘制价格标签
-    ctx.fillStyle = '#9ca3af'
-    ctx.font = '11px monospace'
-    ctx.textAlign = 'right'
-
-    for (let i = 0; i <= 5; i++) {
-      const price = minPrice + (priceRange / 5) * i
-      const y = rect.height - (rect.height / 5) * i
-      ctx.fillText((price * 100).toFixed(1) + '¢', rect.width - 5, y - 5)
-    }
-  }, [data])
-
-  // Mouse move handler
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current || data.length === 0) return
-
-    const rect = containerRef.current.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-
-    // Find the closest data point
-    const dataIndex = Math.round((x / rect.width) * (data.length - 1))
-    const clampedIndex = Math.max(0, Math.min(data.length - 1, dataIndex))
-    const point = data[clampedIndex]
-
-    // Calculate price range for Y position
-    const prices = data.map(d => d.p)
-    const minPrice = Math.min(...prices)
-    const maxPrice = Math.max(...prices)
-    const priceRange = maxPrice - minPrice || 0.1
-
-    const pointY = rect.height - ((point.p - minPrice) / priceRange) * rect.height
-    const pointX = (clampedIndex / (data.length - 1)) * rect.width
-
-    setHoveredPoint({
-      x: pointX,
-      y: pointY,
-      price: point.p,
-      time: point.t,
-    })
-  }
-
-  const handleMouseLeave = () => {
-    setHoveredPoint(null)
-  }
-
-  if (data.length === 0) {
+  if (isEmpty) {
     return (
       <div
         className="flex items-center justify-center bg-dark-700 rounded-lg"
         style={{ height }}
       >
-        <span className="text-gray-500">No price data available</span>
+        <span className="text-gray-500">{t('market.noPriceData')}</span>
       </div>
+    )
+  }
+
+  let chartData: any[] = []
+  let minPrice = 0
+  let maxPrice = 100
+
+  if (multiLine && Array.isArray(data[0])) {
+    // Multiple series mode
+    const allSeries = data as PriceHistory[][]
+
+    // Get all unique timestamps
+    const timestampSet = new Set<number>()
+    allSeries.forEach(series => {
+      series.forEach(point => timestampSet.add(point.t))
+    })
+    const timestamps = Array.from(timestampSet).sort((a, b) => a - b)
+
+    // Create data points with all series
+    chartData = timestamps.map(timestamp => {
+      const point: any = { timestamp }
+      allSeries.forEach((series, index) => {
+        const dataPoint = series.find(p => p.t === timestamp)
+        if (dataPoint) {
+          point[`price${index}`] = dataPoint.p * 100
+        }
+      })
+      return point
+    })
+
+    // Calculate price range across all series
+    const allPrices = allSeries.flatMap(series => series.map(d => d.p * 100))
+    minPrice = allPrices.length > 0 ? Math.min(...allPrices) : 0
+    maxPrice = allPrices.length > 0 ? Math.max(...allPrices) : 100
+  } else {
+    // Single series mode
+    const singleData = data as PriceHistory[]
+    chartData = singleData.map((point) => ({
+      timestamp: point.t,
+      price: point.p,
+      displayPrice: point.p * 100,
+    }))
+
+    // Calculate price range
+    const prices = singleData.map(d => d.p * 100)
+    minPrice = Math.min(...prices)
+    maxPrice = Math.max(...prices)
+  }
+
+  // Custom tooltip component
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const timestamp = payload[0].payload.timestamp
+
+      if (multiLine) {
+        // Show all series prices
+        return (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-dark-900 border border-dark-600 rounded-lg px-3 py-2 shadow-xl"
+          >
+            <div className="text-xs text-gray-400 mb-2">
+              {formatTimestamp(timestamp)}
+            </div>
+            <div className="space-y-1">
+              {payload.map((entry: any, index: number) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: entry.color }}
+                  />
+                  <span className="text-sm font-mono font-semibold" style={{ color: entry.color }}>
+                    {entry.value?.toFixed(1)}¢
+                  </span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )
+      } else {
+        // Single series
+        const price = payload[0].payload.price
+        return (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-dark-900 border border-dark-600 rounded-lg px-3 py-2 shadow-xl"
+          >
+            <div className="text-xs text-gray-400 mb-1">
+              {formatTimestamp(timestamp)}
+            </div>
+            <div className="text-lg font-bold text-success font-mono">
+              {(price * 100).toFixed(1)}¢
+            </div>
+          </motion.div>
+        )
+      }
+    }
+    return null
+  }
+
+  // Custom Y-axis tick component with background
+  const CustomYAxisTick = ({ x, y, payload }: any) => {
+    const value = payload.value
+    const label = `${value.toFixed(1)}¢`
+
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <rect
+          x={-80}
+          y={-10}
+          width={75}
+          height={20}
+          fill="#1a1d26"
+          opacity={0.9}
+        />
+        <text
+          x={-5}
+          y={0}
+          dy={4}
+          textAnchor="end"
+          fill="#9ca3af"
+          fontSize={11}
+          fontFamily="monospace"
+        >
+          {label}
+        </text>
+      </g>
+    )
+  }
+
+  // Custom X-axis tick component
+  const CustomXAxisTick = ({ x, y, payload }: any) => {
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text
+          x={0}
+          y={0}
+          dy={16}
+          textAnchor="middle"
+          fill="#9ca3af"
+          fontSize={11}
+          fontFamily="monospace"
+        >
+          {formatTimestamp(payload.value)}
+        </text>
+      </g>
     )
   }
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-100">Price Chart</h3>
+      <div className="flex items-center justify-end mb-4">
         <div className="flex gap-2">
           {intervals.map((interval) => (
             <button
               key={interval}
               onClick={() => setSelectedInterval(interval)}
-              className={`px-3 py-1 text-xs rounded-md transition-colors ${
+              className={`px-3 py-1 text-xs rounded-md transition-all cursor-pointer active:scale-95 ${
                 selectedInterval === interval
                   ? 'bg-primary text-dark-900'
                   : 'bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-gray-100'
@@ -180,76 +216,84 @@ export function PriceChart({ data, height = 400 }: PriceChartProps) {
       </div>
 
       <motion.div
-        ref={containerRef}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="relative bg-dark-700 rounded-lg overflow-hidden"
         style={{ height }}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
       >
-        <canvas
-          ref={canvasRef}
-          className="w-full h-full"
-          style={{ display: 'block' }}
-        />
-
-        {/* Hover tooltip */}
-        {hoveredPoint && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="absolute pointer-events-none"
-            style={{
-              left: hoveredPoint.x,
-              top: hoveredPoint.y - 60,
-              transform: 'translateX(-50%)',
-            }}
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart
+            data={chartData}
+            margin={{ top: 10, right: 30, bottom: 25, left: 10 }}
           >
-            <div className="bg-dark-900 border border-dark-600 rounded-lg px-3 py-2 shadow-xl">
-              <div className="text-xs text-gray-400 mb-1">
-                {new Date(hoveredPoint.time).toLocaleString()}
-              </div>
-              <div className="text-lg font-bold text-success font-mono">
-                {(hoveredPoint.price * 100).toFixed(1)}¢
-              </div>
-            </div>
-            {/* Arrow */}
-            <div
-              className="absolute left-1/2 -translate-x-1/2 w-0 h-0"
-              style={{
-                top: '100%',
-                borderLeft: '6px solid transparent',
-                borderRight: '6px solid transparent',
-                borderTop: '6px solid #1a1d26',
-              }}
-            />
-          </motion.div>
-        )}
+            <defs>
+              {/* 移除渐变，不再使用阴影 */}
+            </defs>
 
-        {/* Crosshair */}
-        {hoveredPoint && (
-          <>
-            {/* Vertical line */}
-            <div
-              className="absolute top-0 bottom-0 w-px bg-gray-500/30 pointer-events-none"
-              style={{ left: hoveredPoint.x }}
+            <CartesianGrid strokeDasharray="0" stroke="#22262f" />
+
+            <XAxis
+              dataKey="timestamp"
+              tick={<CustomXAxisTick />}
+              stroke="#22262f"
+              tickLine={false}
+              interval={Math.floor(chartData.length / 6)}
             />
-            {/* Horizontal line */}
-            <div
-              className="absolute left-0 right-0 h-px bg-gray-500/30 pointer-events-none"
-              style={{ top: hoveredPoint.y }}
+
+            <YAxis
+              tick={<CustomYAxisTick />}
+              stroke="#22262f"
+              tickLine={false}
+              domain={[minPrice, maxPrice]}
+              tickCount={6}
             />
-            {/* Dot */}
-            <div
-              className="absolute w-2 h-2 rounded-full bg-success border-2 border-dark-900 pointer-events-none"
-              style={{
-                left: hoveredPoint.x - 4,
-                top: hoveredPoint.y - 4,
+
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={{
+                stroke: 'rgba(107, 114, 128, 0.3)',
+                strokeWidth: 1,
               }}
+              wrapperStyle={{ zIndex: 100 }}
+              allowEscapeViewBox={{ x: true, y: true }}
             />
-          </>
-        )}
+
+            {multiLine ? (
+              // Render multiple lines without shadow fill
+              (data as PriceHistory[][]).map((_, index) => (
+                <Area
+                  key={index}
+                  type="monotone"
+                  dataKey={`price${index}`}
+                  stroke={lineColors[index % lineColors.length]}
+                  strokeWidth={2}
+                  fill="transparent"
+                  activeDot={{
+                    r: 4,
+                    fill: lineColors[index % lineColors.length],
+                    stroke: '#1a1d26',
+                    strokeWidth: 2,
+                  }}
+                />
+              ))
+            ) : (
+              // Single line without shadow fill
+              <Area
+                type="monotone"
+                dataKey="displayPrice"
+                stroke="#10b981"
+                strokeWidth={2}
+                fill="transparent"
+                activeDot={{
+                  r: 4,
+                  fill: '#10b981',
+                  stroke: '#1a1d26',
+                  strokeWidth: 2,
+                }}
+              />
+            )}
+          </AreaChart>
+        </ResponsiveContainer>
       </motion.div>
     </div>
   )

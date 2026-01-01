@@ -46,15 +46,15 @@ export function calculateUserPnL(positions: any[], trades: any[]) {
   let unrealizedPnL = 0
 
   // 简化计算（实际需要更复杂的逻辑）
-  positions.forEach((position) => {
-    const value = parseFloat(position.value) || 0
-    const size = parseFloat(position.size) || 0
+  positions.forEach((_position) => {
+    // const value = parseFloat(position.value) || 0
+    // const size = parseFloat(position.size) || 0
 
     // 这里需要根据买入价格计算未实现盈亏
     // unrealizedPnL += (currentPrice - avgBuyPrice) * size
   })
 
-  trades.forEach((trade) => {
+  trades.forEach((_trade) => {
     // 计算已实现盈亏
     // realizedPnL += profit from closed positions
   })

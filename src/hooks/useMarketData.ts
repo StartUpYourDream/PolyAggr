@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { getMarkets, getMarketBySlug, getFeaturedMarkets, searchMarkets } from '../api'
-import type { Market } from '../types'
 
 /**
  * 获取市场列表

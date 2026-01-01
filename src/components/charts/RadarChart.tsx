@@ -1,5 +1,13 @@
 import { motion } from 'framer-motion'
-import { useEffect, useRef } from 'react'
+import {
+  ResponsiveContainer,
+  RadarChart as RechartsRadar,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  Tooltip,
+} from 'recharts'
 
 export interface RadarDataPoint {
   label: string
@@ -13,133 +21,45 @@ interface RadarChartProps {
   color?: string
 }
 
-export function RadarChart({ data, title, height = 300, color = '#00d395' }: RadarChartProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-
-  useEffect(() => {
-    if (!canvasRef.current || data.length === 0) return
-
-    const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    // Set canvas size for retina display
-    const rect = canvas.getBoundingClientRect()
-    canvas.width = rect.width * window.devicePixelRatio
-    canvas.height = rect.height * window.devicePixelRatio
-    ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
-
-    // Clear canvas
-    ctx.clearRect(0, 0, rect.width, rect.height)
-
-    // Calculate center and radius
-    const centerX = rect.width / 2
-    const centerY = rect.height / 2
-    const radius = Math.min(centerX, centerY) - 60 // Leave space for labels
-
-    const angleStep = (Math.PI * 2) / data.length
-
-    // Draw background circles (5 levels)
-    ctx.strokeStyle = '#22262f'
-    ctx.lineWidth = 1
-
-    for (let i = 1; i <= 5; i++) {
-      const r = (radius / 5) * i
-      ctx.beginPath()
-      ctx.arc(centerX, centerY, r, 0, Math.PI * 2)
-      ctx.stroke()
-    }
-
-    // Draw axis lines
-    ctx.strokeStyle = '#22262f'
-    ctx.lineWidth = 1
-
-    data.forEach((_, index) => {
-      const angle = angleStep * index - Math.PI / 2
-      const x = centerX + radius * Math.cos(angle)
-      const y = centerY + radius * Math.sin(angle)
-
-      ctx.beginPath()
-      ctx.moveTo(centerX, centerY)
-      ctx.lineTo(x, y)
-      ctx.stroke()
-    })
-
-    // Draw data polygon
-    ctx.strokeStyle = color
-    ctx.lineWidth = 2
-    ctx.fillStyle = `${color}40` // Add transparency
-
-    ctx.beginPath()
-
-    data.forEach((point, index) => {
-      const angle = angleStep * index - Math.PI / 2
-      const value = Math.max(0, Math.min(100, point.value)) / 100 // Normalize to 0-1
-      const x = centerX + radius * value * Math.cos(angle)
-      const y = centerY + radius * value * Math.sin(angle)
-
-      if (index === 0) {
-        ctx.moveTo(x, y)
-      } else {
-        ctx.lineTo(x, y)
-      }
-    })
-
-    ctx.closePath()
-    ctx.stroke()
-    ctx.fill()
-
-    // Draw data points
-    data.forEach((point, index) => {
-      const angle = angleStep * index - Math.PI / 2
-      const value = Math.max(0, Math.min(100, point.value)) / 100
-      const x = centerX + radius * value * Math.cos(angle)
-      const y = centerY + radius * value * Math.sin(angle)
-
-      ctx.fillStyle = color
-      ctx.beginPath()
-      ctx.arc(x, y, 4, 0, Math.PI * 2)
-      ctx.fill()
-    })
-
-    // Draw labels
-    ctx.fillStyle = '#9ca3af'
-    ctx.font = '12px sans-serif'
-
-    data.forEach((point, index) => {
-      const angle = angleStep * index - Math.PI / 2
-      const labelRadius = radius + 30
-      const x = centerX + labelRadius * Math.cos(angle)
-      const y = centerY + labelRadius * Math.sin(angle)
-
-      // Adjust text alignment based on position
-      if (Math.abs(angle) < Math.PI / 4 || Math.abs(angle - Math.PI) < Math.PI / 4) {
-        ctx.textAlign = angle > 0 ? 'left' : 'right'
-      } else {
-        ctx.textAlign = 'center'
-      }
-
-      ctx.textBaseline = 'middle'
-      ctx.fillText(point.label, x, y)
-
-      // Draw value below label
-      ctx.fillStyle = '#6b7280'
-      ctx.font = '10px monospace'
-      ctx.fillText(`${point.value.toFixed(0)}%`, x, y + 15)
-      ctx.fillStyle = '#9ca3af'
-      ctx.font = '12px sans-serif'
-    })
-  }, [data, color])
-
+export function RadarChart({ data, title, height = 300, color = '#10b981' }: RadarChartProps) {
   if (data.length === 0) {
     return (
       <div
         className="flex items-center justify-center bg-dark-700 rounded-lg"
         style={{ height }}
       >
-        <span className="text-gray-500">No data available</span>
+        <span className="text-gray-500">暂无数据</span>
       </div>
     )
+  }
+
+  // Transform data for Recharts Radar
+  const chartData = data.map((point) => ({
+    subject: point.label,
+    value: point.value,
+    fullMark: 100,
+  }))
+
+  // Custom tooltip component
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload
+      return (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-dark-900 border border-dark-600 rounded-lg px-3 py-2 shadow-xl"
+        >
+          <div className="text-sm text-gray-300 mb-1">
+            {data.subject}
+          </div>
+          <div className="text-lg font-bold text-success font-mono">
+            {data.value.toFixed(0)}%
+          </div>
+        </motion.div>
+      )
+    }
+    return null
   }
 
   return (
@@ -152,11 +72,44 @@ export function RadarChart({ data, title, height = 300, color = '#00d395' }: Rad
         className="relative bg-dark-700 rounded-lg overflow-hidden"
         style={{ height }}
       >
-        <canvas
-          ref={canvasRef}
-          className="w-full h-full"
-          style={{ display: 'block' }}
-        />
+        <ResponsiveContainer width="100%" height="100%">
+          <RechartsRadar data={chartData}>
+            <PolarGrid
+              stroke="#22262f"
+              strokeWidth={1}
+            />
+            <PolarAngleAxis
+              dataKey="subject"
+              tick={{
+                fill: '#9ca3af',
+                fontSize: 12,
+              }}
+              tickLine={false}
+            />
+            <PolarRadiusAxis
+              angle={90}
+              domain={[0, 100]}
+              tick={{
+                fill: '#6b7280',
+                fontSize: 11,
+              }}
+              tickLine={false}
+              axisLine={false}
+            />
+            <Radar
+              name="Value"
+              dataKey="value"
+              stroke={color}
+              fill={color}
+              fillOpacity={0.25}
+              strokeWidth={2}
+            />
+            <Tooltip
+              content={<CustomTooltip />}
+              wrapperStyle={{ zIndex: 100 }}
+            />
+          </RechartsRadar>
+        </ResponsiveContainer>
       </motion.div>
     </div>
   )

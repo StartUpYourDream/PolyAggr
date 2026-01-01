@@ -5,6 +5,70 @@
 
 import type { Market, OrderBook, PriceHistory, UserProfile } from '../../types'
 
+// 生成子市场数据
+function generateSubMarkets(parentId: number, count: number) {
+  const subMarkets = []
+  const subQuestions = [
+    'Q1 2025',
+    'Q2 2025',
+    'Q3 2025',
+    'Q4 2025',
+    'Before June 2025',
+    'Before December 2025',
+    'Early 2025',
+    'Late 2025',
+  ]
+
+  for (let i = 0; i < count; i++) {
+    const yesPrice = 0.2 + Math.random() * 0.6
+    const noPrice = 1 - yesPrice
+    const volume = Math.random() * 500000 + 50000
+
+    subMarkets.push({
+      id: `submarket-${parentId}-${i}`,
+      question: subQuestions[i % subQuestions.length],
+      outcomes: [
+        {
+          id: `suboutcome-yes-${parentId}-${i}`,
+          price: yesPrice.toString(),
+          size: (Math.random() * 50000).toString(),
+          price_change_percent: (Math.random() * 20 - 10),
+        },
+        {
+          id: `suboutcome-no-${parentId}-${i}`,
+          price: noPrice.toString(),
+          size: (Math.random() * 50000).toString(),
+          price_change_percent: (Math.random() * 20 - 10),
+        },
+      ],
+      outcomePrices: [yesPrice.toString(), noPrice.toString()],
+      volume: volume.toString(),
+      active: true,
+      closed: false,
+      archived: false,
+      accepting_orders: true,
+      min_tick_size: 0.01,
+      min_order_size: 1,
+      end_date_iso: new Date(Date.now() + Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
+      game_start_time: null,
+      question_id: `subquestion-${parentId}-${i}`,
+      neg_risk: false,
+      grouped_positions: [],
+      seconds_delay: 0,
+      notification_threshold: 0.1,
+      active_order_count: Math.floor(Math.random() * 100),
+      icon: `https://picsum.photos/seed/${parentId}-${i}/50/50`,
+      description: `Sub-market for ${subQuestions[i % subQuestions.length]}`,
+      image: `https://picsum.photos/seed/${parentId}-${i}/200/200`,
+      enable_order_book: true,
+      best_bid: (yesPrice - 0.01).toFixed(4),
+      best_ask: (yesPrice + 0.01).toFixed(4),
+    })
+  }
+
+  return subMarkets
+}
+
 // 生成随机市场数据
 function generateMockMarket(id: number, category: string): Market {
   const questions = {
@@ -103,7 +167,7 @@ function generateMockMarket(id: number, category: string): Market {
         winner: false,
       },
     ],
-    markets: [],
+    markets: id % 3 === 0 ? generateSubMarkets(id, 4) : [], // 每3个市场中有1个有子市场
     enable_order_book: true,
     order_price_minimum: 0.01,
     order_price_maximum: 0.99,
@@ -171,7 +235,7 @@ export function getMockOrderBook(tokenId: string): OrderBook {
 }
 
 // 生成 Mock 价格历史
-export function getMockPriceHistory(tokenId: string, points = 100): PriceHistory[] {
+export function getMockPriceHistory(_tokenId: string, points = 100): PriceHistory[] {
   const history: PriceHistory[] = []
   let price = 0.5 + (Math.random() - 0.5) * 0.3
 

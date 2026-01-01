@@ -7,26 +7,26 @@
   --color-dark-700: #1a1d24;
   --color-dark-600: #22262f;
 
-  /* 主色调 - 浅绿色 */
-  --color-primary: #00d395;
-  --color-primary-50: #e6fff7;
-  --color-primary-100: #b3ffe6;
-  --color-primary-200: #80ffd4;
-  --color-primary-300: #4dffc3;
-  --color-primary-400: #1affb1;
-  --color-primary-500: #00d395;
-  --color-primary-600: #00a676;
-  --color-primary-700: #007a57;
-  --color-primary-800: #004d38;
-  --color-primary-900: #002119;
+  /* 主色调 - 蓝紫色 (从截图提取) */
+  --color-primary: #3b82f6;
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
 
   /* 红色 - 用于下跌/卖出 */
-  --color-danger: #ff4757;
-  --color-danger-light: #ff6b7a;
+  --color-danger: #ef4444;
+  --color-danger-light: #f87171;
 
   /* 绿色 - 用于上涨/买入 */
-  --color-success: #00d395;
-  --color-success-light: #00e6a4;
+  --color-success: #10b981;
+  --color-success-light: #34d399;
 
   /* 动画 */
   --animate-fade-in: fadeIn 0.2s ease-out;

@@ -87,7 +87,7 @@ export class PolymarketWebSocket {
   }
 
   private handleMessage(data: any) {
-    const { type, channel, data: payload } = data
+    const { channel, data: payload } = data
 
     // 触发对应频道的所有处理器
     const channelHandlers = this.handlers.get(channel)
