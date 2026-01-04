@@ -1,14 +1,12 @@
 import { motion } from 'framer-motion'
 import type { UserPnL } from '../../types'
 import { formatDate } from '../../utils/format'
-import { useTheme } from '../../stores/theme'
 import {
   ResponsiveContainer,
   AreaChart,
   Area,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   ReferenceLine,
 } from 'recharts'
@@ -19,8 +17,6 @@ interface ProfitChartProps {
 }
 
 export function ProfitChart({ data, height = 300 }: ProfitChartProps) {
-  const { theme } = useTheme()
-
   if (data.length === 0) {
     return (
       <div

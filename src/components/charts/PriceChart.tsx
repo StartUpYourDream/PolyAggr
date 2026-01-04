@@ -3,14 +3,12 @@ import { useState } from 'react'
 import type { PriceHistory } from '../../types'
 import { formatTimestamp } from '../../utils/format'
 import { useTranslation } from '../../i18n'
-import { useTheme } from '../../stores/theme'
 import {
   ResponsiveContainer,
   AreaChart,
   Area,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
 } from 'recharts'
 
@@ -28,7 +26,6 @@ export function PriceChart({
   lineColors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
 }: PriceChartProps) {
   const { t } = useTranslation()
-  const { theme } = useTheme()
   const [selectedInterval, setSelectedInterval] = useState('1d')
 
   const intervals = ['1s', '1m', '5m', '1h', '1d', '1w']
