@@ -170,8 +170,8 @@ export function Trending() {
                 onClick={() => setSelectedCategory(cat.value)}
                 className={`px-4 py-2 text-sm rounded-lg transition-all cursor-pointer active:scale-95 ${
                   selectedCategory === cat.value
-                    ? 'bg-primary text-dark-900 font-medium'
-                    : 'bg-dark-700 text-gray-300 hover:bg-dark-600 hover:text-gray-100'
+                    ? 'bg-primary !text-white font-medium'
+                    : 'bg-dark-700 dark:bg-dark-700 light:bg-gray-200 text-gray-300 dark:text-gray-300 light:text-gray-700 hover:bg-dark-600 dark:hover:bg-dark-600 light:hover:bg-gray-300 hover:text-gray-100 dark:hover:text-gray-100 light:hover:text-gray-900'
                 }`}
               >
                 {cat.label}
@@ -200,7 +200,7 @@ export function Trending() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-dark-600 text-left">
+                <tr className="border-b border-dark-600 dark:border-dark-600 light:border-gray-200 text-left">
                   <th className="px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">
                     {t('trending.event')}
                   </th>
@@ -264,7 +264,7 @@ export function Trending() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: Math.min(index * 0.02, 0.5) }}
-                    className="border-b border-dark-700 table-row-hover"
+                    className="border-b border-dark-700 dark:border-dark-700 light:border-gray-100 table-row-hover"
                     onClick={() => navigate(`/event/${market.slug}`)}
                   >
                     <td className="px-4 py-4">
@@ -276,7 +276,7 @@ export function Trending() {
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-dark-600 text-gray-300 capitalize">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-dark-600 dark:bg-dark-600 light:bg-gray-200 text-gray-300 dark:text-gray-300 light:text-gray-700 capitalize">
                         {market.category}
                       </span>
                     </td>

@@ -96,10 +96,10 @@ export function Search() {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
                       onClick={() => navigate(`/event/${market.id}`)}
-                      className="p-4 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors cursor-pointer border border-dark-600 hover:border-primary/30"
+                      className="p-4 rounded-lg bg-dark-700 dark:bg-dark-700 light:bg-gray-50 hover:bg-dark-600 dark:hover:bg-dark-600 light:hover:bg-gray-100/30 transition-colors cursor-pointer border border-dark-600 dark:border-dark-600 light:border-gray-200 hover:border-primary/30"
                     >
                       <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-lg bg-dark-600 flex items-center justify-center text-xl flex-shrink-0">
+                        <div className="w-12 h-12 rounded-lg bg-dark-600 dark:bg-dark-600 light:bg-gray-200 flex items-center justify-center text-xl flex-shrink-0">
                           {market.icon ? (
                             <img src={market.icon} alt="" className="w-full h-full rounded-lg object-cover" />
                           ) : (
@@ -117,7 +117,7 @@ export function Search() {
                             <span className="text-gray-400">
                               Vol {formatCurrency(volume24h)}
                             </span>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-dark-600 text-gray-300 capitalize">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-dark-600 dark:bg-dark-600 light:bg-gray-200 text-gray-300 dark:text-gray-300 light:text-gray-700 capitalize">
                               {market.tags[0] || 'Other'}
                             </span>
                           </div>
@@ -153,7 +153,7 @@ export function Search() {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
                       onClick={() => navigate(`/user/${user.address}`)}
-                      className="p-4 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors cursor-pointer border border-dark-600 hover:border-primary/30"
+                      className="p-4 rounded-lg bg-dark-700 dark:bg-dark-700 light:bg-gray-50 hover:bg-dark-600 dark:hover:bg-dark-600 light:hover:bg-gray-100/30 transition-colors cursor-pointer border border-dark-600 dark:border-dark-600 light:border-gray-200 hover:border-primary/30"
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center text-xl font-bold flex-shrink-0">
@@ -189,7 +189,7 @@ export function Search() {
 
           {/* Show hint for address search */}
           {!isAddressQuery && query.length > 0 && (
-            <div className="card p-4 bg-dark-700/50 border border-dark-600">
+            <div className="card p-4 bg-dark-700/50 dark:bg-dark-700/50 light:bg-blue-50 border border-dark-600 dark:border-dark-600 light:border-blue-200">
               <p className="text-sm text-gray-400">
                 💡 <span className="text-gray-300">{t('search.tip')}</span> {t('search.tipMessage')}
               </p>

@@ -55,7 +55,7 @@ export function MarketStats({ stats, actionButton }: MarketStatsProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: stats.length * 0.05 }}
-          className="pt-3 border-t border-dark-600"
+          className="pt-3 border-t border-dark-600 dark:border-dark-600 light:border-gray-200"
         >
           {actionButton.href ? (
             <a

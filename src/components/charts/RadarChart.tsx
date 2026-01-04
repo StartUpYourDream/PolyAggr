@@ -25,7 +25,7 @@ export function RadarChart({ data, title, height = 300, color = '#10b981' }: Rad
   if (data.length === 0) {
     return (
       <div
-        className="flex items-center justify-center bg-dark-700 rounded-lg"
+        className="flex items-center justify-center bg-dark-700 dark:bg-dark-700 light:bg-gray-100 rounded-lg"
         style={{ height }}
       >
         <span className="text-gray-500">暂无数据</span>
@@ -48,7 +48,7 @@ export function RadarChart({ data, title, height = 300, color = '#10b981' }: Rad
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-dark-900 border border-dark-600 rounded-lg px-3 py-2 shadow-xl"
+          className="bg-dark-900 dark:bg-dark-900 light:bg-white border border-dark-600 dark:border-dark-600 light:border-gray-200 rounded-lg px-3 py-2 shadow-xl"
         >
           <div className="text-sm text-gray-300 mb-1">
             {data.subject}
@@ -69,7 +69,7 @@ export function RadarChart({ data, title, height = 300, color = '#10b981' }: Rad
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="relative bg-dark-700 rounded-lg overflow-hidden"
+        className="relative bg-dark-700 dark:bg-dark-700 light:bg-gray-50 rounded-lg overflow-hidden"
         style={{ height }}
       >
         <ResponsiveContainer width="100%" height="100%">

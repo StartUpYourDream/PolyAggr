@@ -243,8 +243,8 @@ export function UserDetail() {
               onClick={() => setTimeRange(range.key)}
               className={`px-3 py-1.5 text-xs rounded transition-all cursor-pointer active:scale-95 ${
                 timeRange === range.key
-                  ? 'bg-primary text-dark-900 font-semibold'
-                  : 'bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-gray-100'
+                  ? 'bg-primary !text-white font-semibold'
+                  : 'bg-dark-700 dark:bg-dark-700 light:bg-gray-200 text-gray-400 dark:text-gray-400 light:text-gray-700 hover:bg-dark-600 dark:hover:bg-dark-600 light:hover:bg-gray-300 hover:text-gray-100 dark:hover:text-gray-100 light:hover:text-gray-900'
               }`}
             >
               {range.label}
@@ -288,7 +288,7 @@ export function UserDetail() {
               </div>
 
               {/* 右侧：AI 总结 */}
-              <div className="flex-1 bg-dark-700/50 rounded-lg p-4 border border-dark-600">
+              <div className="flex-1 bg-dark-700/50 dark:bg-dark-700/50 light:bg-gray-100 rounded-lg p-4 border border-dark-600 dark:border-dark-600 light:border-gray-200">
                 <div className="flex items-center gap-2 mb-2">
                   <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -372,7 +372,7 @@ export function UserDetail() {
                       <span className="text-gray-400">{item.range}</span>
                       <span className="text-gray-300">{item.count}({item.percentage}%)</span>
                     </div>
-                    <div className="h-1 bg-dark-700 rounded-full overflow-hidden">
+                    <div className="h-1 bg-dark-700 dark:bg-dark-700 light:bg-gray-200 rounded-full overflow-hidden">
                       <div
                         className={`h-full ${item.color}`}
                         style={{ width: `${item.percentage}%` }}
@@ -430,7 +430,7 @@ export function UserDetail() {
         transition={{ delay: 0.4 }}
         className="card"
       >
-        <div className="border-b border-dark-600">
+        <div className="border-b border-dark-600 dark:border-dark-600 light:border-gray-200">
           <div className="flex gap-6 px-6">
             {tabs.map((tab) => (
               <button
@@ -459,7 +459,7 @@ export function UserDetail() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="text-left text-xs text-gray-500 border-b border-dark-600">
+                  <tr className="text-left text-xs text-gray-500 border-b border-dark-600 dark:border-dark-600 light:border-gray-200">
                     <th className="pb-3 pr-4 font-medium">{t('table.eventName')}</th>
                     <th className="pb-3 px-2 font-medium text-right">{t('table.shares')}</th>
                     <th className="pb-3 px-2 font-medium text-right">{t('table.value')}</th>
@@ -484,7 +484,7 @@ export function UserDetail() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.03 }}
-                      className="border-b border-dark-700 hover:bg-dark-700/30 transition-colors cursor-pointer"
+                      className="border-b border-dark-700 dark:border-dark-700 light:border-gray-100 hover:bg-dark-700/30 dark:hover:bg-dark-700/30 light:hover:bg-gray-100/30 transition-colors cursor-pointer"
                     >
                       <td className="py-3 pr-4">
                         <button
@@ -562,7 +562,7 @@ export function UserDetail() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="text-left text-xs text-gray-500 border-b border-dark-600">
+                  <tr className="text-left text-xs text-gray-500 border-b border-dark-600 dark:border-dark-600 light:border-gray-200">
                     <th className="pb-3 pr-4 font-medium">{t('table.eventName')}</th>
                     <th className="pb-3 px-2 font-medium text-right">{t('table.avgBuyPrice')}</th>
                     <th className="pb-3 px-2 font-medium text-right">{t('table.avgSellPrice')}</th>
@@ -584,7 +584,7 @@ export function UserDetail() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.03 }}
-                      className="border-b border-dark-700 hover:bg-dark-700/30 transition-colors cursor-pointer"
+                      className="border-b border-dark-700 dark:border-dark-700 light:border-gray-100 hover:bg-dark-700/30 dark:hover:bg-dark-700/30 light:hover:bg-gray-100/30 transition-colors cursor-pointer"
                     >
                       <td className="py-3 pr-4">
                         <button
@@ -653,7 +653,7 @@ export function UserDetail() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="text-left text-xs text-gray-500 border-b border-dark-600">
+                  <tr className="text-left text-xs text-gray-500 border-b border-dark-600 dark:border-dark-600 light:border-gray-200">
                     <th className="pb-3 pr-4 font-medium">{t('table.time')}</th>
                     <th className="pb-3 px-2 font-medium">{t('table.eventName')}</th>
                     <th className="pb-3 px-2 font-medium">{t('table.type')}</th>
@@ -670,7 +670,7 @@ export function UserDetail() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.03 }}
-                      className="border-b border-dark-700 hover:bg-dark-700/30 transition-colors cursor-pointer"
+                      className="border-b border-dark-700 dark:border-dark-700 light:border-gray-100 hover:bg-dark-700/30 dark:hover:bg-dark-700/30 light:hover:bg-gray-100/30 transition-colors cursor-pointer"
                     >
                       <td className="py-3 pr-4 text-sm">
                         <div className="text-gray-300">{activity.timestamp}</div>

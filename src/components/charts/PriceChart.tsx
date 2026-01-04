@@ -3,6 +3,7 @@ import { useState } from 'react'
 import type { PriceHistory } from '../../types'
 import { formatTimestamp } from '../../utils/format'
 import { useTranslation } from '../../i18n'
+import { useTheme } from '../../stores/theme'
 import {
   ResponsiveContainer,
   AreaChart,
@@ -27,6 +28,7 @@ export function PriceChart({
   lineColors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
 }: PriceChartProps) {
   const { t } = useTranslation()
+  const { theme } = useTheme()
   const [selectedInterval, setSelectedInterval] = useState('1d')
 
   const intervals = ['1s', '1m', '5m', '1h', '1d', '1w']
@@ -39,7 +41,7 @@ export function PriceChart({
   if (isEmpty) {
     return (
       <div
-        className="flex items-center justify-center bg-dark-700 rounded-lg"
+        className="flex items-center justify-center bg-dark-700 dark:bg-dark-700 light:bg-gray-100 rounded-lg"
         style={{ height }}
       >
         <span className="text-gray-500">{t('market.noPriceData')}</span>
@@ -104,7 +106,7 @@ export function PriceChart({
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-dark-900 border border-dark-600 rounded-lg px-3 py-2 shadow-xl"
+            className="bg-dark-900 dark:bg-dark-900 light:bg-white border border-dark-600 dark:border-dark-600 light:border-gray-200 rounded-lg px-3 py-2 shadow-xl"
           >
             <div className="text-xs text-gray-400 mb-2">
               {formatTimestamp(timestamp)}
@@ -131,7 +133,7 @@ export function PriceChart({
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-dark-900 border border-dark-600 rounded-lg px-3 py-2 shadow-xl"
+            className="bg-dark-900 dark:bg-dark-900 light:bg-white border border-dark-600 dark:border-dark-600 light:border-gray-200 rounded-lg px-3 py-2 shadow-xl"
           >
             <div className="text-xs text-gray-400 mb-1">
               {formatTimestamp(timestamp)}
@@ -146,21 +148,13 @@ export function PriceChart({
     return null
   }
 
-  // Custom Y-axis tick component with background
+  // Custom Y-axis tick component - no background needed
   const CustomYAxisTick = ({ x, y, payload }: any) => {
     const value = payload.value
     const label = `${value.toFixed(1)}¢`
 
     return (
       <g transform={`translate(${x},${y})`}>
-        <rect
-          x={-80}
-          y={-10}
-          width={75}
-          height={20}
-          fill="#1a1d26"
-          opacity={0.9}
-        />
         <text
           x={-5}
           y={0}
@@ -205,8 +199,8 @@ export function PriceChart({
               onClick={() => setSelectedInterval(interval)}
               className={`px-3 py-1 text-xs rounded-md transition-all cursor-pointer active:scale-95 ${
                 selectedInterval === interval
-                  ? 'bg-primary text-dark-900'
-                  : 'bg-dark-700 text-gray-400 hover:bg-dark-600 hover:text-gray-100'
+                  ? 'bg-primary !text-white'
+                  : 'bg-dark-700 dark:bg-dark-700 light:bg-gray-200 text-gray-400 dark:text-gray-400 light:text-gray-700 hover:bg-dark-600 dark:hover:bg-dark-600 light:hover:bg-gray-300 hover:text-gray-100 dark:hover:text-gray-100 light:hover:text-gray-900'
               }`}
             >
               {interval}
@@ -218,7 +212,7 @@ export function PriceChart({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative bg-dark-700 rounded-lg overflow-hidden"
+        className="relative bg-dark-700 dark:bg-dark-700 light:bg-gray-50 rounded-lg overflow-hidden"
         style={{ height }}
       >
         <ResponsiveContainer width="100%" height="100%">
@@ -230,7 +224,7 @@ export function PriceChart({
               {/* 移除渐变，不再使用阴影 */}
             </defs>
 
-            <CartesianGrid strokeDasharray="0" stroke="#22262f" />
+            {/* Remove grid */}
 
             <XAxis
               dataKey="timestamp"

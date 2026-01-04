@@ -8,12 +8,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        // 主背景色
+        // 暗色主题背景
         dark: {
           900: '#0a0b0d',
           800: '#12141a',
           700: '#1a1d24',
           600: '#22262f',
+        },
+        // 亮色主题背景
+        light: {
+          900: '#ffffff',
+          800: '#f9fafb',
+          700: '#f3f4f6',
+          600: '#e5e7eb',
         },
         // 主色调 - 蓝色
         primary: {

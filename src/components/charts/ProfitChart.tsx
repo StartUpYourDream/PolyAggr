@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import type { UserPnL } from '../../types'
 import { formatDate } from '../../utils/format'
+import { useTheme } from '../../stores/theme'
 import {
   ResponsiveContainer,
   AreaChart,
@@ -18,10 +19,12 @@ interface ProfitChartProps {
 }
 
 export function ProfitChart({ data, height = 300 }: ProfitChartProps) {
+  const { theme } = useTheme()
+
   if (data.length === 0) {
     return (
       <div
-        className="flex items-center justify-center bg-dark-700 rounded-lg"
+        className="flex items-center justify-center bg-dark-700 dark:bg-dark-700 light:bg-gray-100 rounded-lg"
         style={{ height }}
       >
         <span className="text-gray-500">暂无盈亏数据</span>
@@ -55,7 +58,7 @@ export function ProfitChart({ data, height = 300 }: ProfitChartProps) {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-dark-900 border border-dark-600 rounded-lg px-3 py-2 shadow-xl"
+          className="bg-dark-900 dark:bg-dark-900 light:bg-white border border-dark-600 dark:border-dark-600 light:border-gray-200 rounded-lg px-3 py-2 shadow-xl"
         >
           <div className="text-xs text-gray-400 mb-1">
             {payload[0].payload.date}
@@ -71,21 +74,13 @@ export function ProfitChart({ data, height = 300 }: ProfitChartProps) {
     return null
   }
 
-  // Custom Y-axis tick component with background to prevent overlap
+  // Custom Y-axis tick component - no background needed
   const CustomYAxisTick = ({ x, y, payload }: any) => {
     const value = payload.value
     const label = value >= 0 ? `+$${value.toFixed(0)}` : `-$${Math.abs(value).toFixed(0)}`
 
     return (
       <g transform={`translate(${x},${y})`}>
-        <rect
-          x={-80}
-          y={-10}
-          width={75}
-          height={20}
-          fill="#1a1d26"
-          opacity={0.9}
-        />
         <text
           x={-5}
           y={0}
@@ -126,7 +121,7 @@ export function ProfitChart({ data, height = 300 }: ProfitChartProps) {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative bg-dark-700 rounded-lg overflow-hidden"
+        className="relative bg-dark-700 dark:bg-dark-700 light:bg-gray-50 rounded-lg overflow-hidden"
         style={{ height }}
       >
         <ResponsiveContainer width="100%" height="100%">
@@ -145,7 +140,7 @@ export function ProfitChart({ data, height = 300 }: ProfitChartProps) {
               </linearGradient>
             </defs>
 
-            <CartesianGrid strokeDasharray="0" stroke="#22262f" />
+            {/* Remove grid */}
 
             <XAxis
               dataKey="timestamp"

@@ -207,7 +207,7 @@ export function EventDetail() {
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/20 text-primary">
             {market.active ? t('common.active') : t('common.closed')}
           </span>
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-dark-600 text-gray-300 capitalize">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-dark-600 dark:bg-dark-600 light:bg-gray-200 text-gray-300 dark:text-gray-300 light:text-gray-700 capitalize">
             {market.tags[0] || t('common.other')}
           </span>
           <span className="text-gray-500 text-sm">{t('market.endDate')} {formatCountdown(market.end_date_iso)}</span>
@@ -223,7 +223,7 @@ export function EventDetail() {
               <select
                 value={selectedSubMarketId || ''}
                 onChange={(e) => setSelectedSubMarketId(e.target.value || null)}
-                className="bg-dark-700 border border-dark-600 text-gray-100 text-sm rounded-lg px-3 py-2 cursor-pointer hover:bg-dark-600 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all min-w-[200px] max-w-[400px]"
+                className="bg-dark-700 dark:bg-dark-700 light:bg-white border border-dark-600 dark:border-dark-600 light:border-gray-300 text-gray-100 dark:text-gray-100 light:text-gray-900 text-sm rounded-lg px-3 py-2 cursor-pointer hover:bg-dark-600 dark:hover:bg-dark-600 light:hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all min-w-[200px] max-w-[400px]"
               >
                 <option value="">{t('market.allSubEvents')}</option>
                 {market.markets.map((subMarket) => {
@@ -242,9 +242,9 @@ export function EventDetail() {
         </div>
       </motion.div>
 
-      {/* Main Layout: 60% Chart + 20% OrderBook + 20% Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-10 gap-4 mb-4">
-        {/* Left: Price Chart (60%) */}
+      {/* Main Layout: 40% Chart + 13.33% YES OrderBook + 13.33% NO OrderBook + 33.33% Stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-15 gap-4 mb-4">
+        {/* Left: Price Chart (40% - 6/15) */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -258,14 +258,14 @@ export function EventDetail() {
           />
         </motion.div>
 
-        {/* Middle: OrderBook (20%) */}
+        {/* Middle Left: YES OrderBook (13.33% - 2/15) */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.15 }}
           className="lg:col-span-2 card p-4 pb-2"
         >
-          <h2 className="text-base font-semibold text-gray-100 mb-3">{t('market.orderBook')}</h2>
+          <h2 className="text-base font-semibold text-success mb-3 text-center">{t('market.yesOrderBook')}</h2>
           {orderBookLoading ? (
             <div className="h-[420px] flex items-center justify-center">
               <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
@@ -281,19 +281,42 @@ export function EventDetail() {
           )}
         </motion.div>
 
-        {/* Right: Market Stats Grid (20%) */}
+        {/* Middle Right: NO OrderBook (13.33% - 2/15) */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.175 }}
+          className="lg:col-span-2 card p-4 pb-2"
+        >
+          <h2 className="text-base font-semibold text-danger mb-3 text-center">{t('market.noOrderBookTitle')}</h2>
+          {orderBookLoading ? (
+            <div className="h-[420px] flex items-center justify-center">
+              <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            </div>
+          ) : orderBook ? (
+            <div className="h-[420px]">
+              <OrderBook orderBook={orderBook} maxLevels={25} />
+            </div>
+          ) : (
+            <div className="h-[420px] flex items-center justify-center text-gray-500 text-sm">
+              {t('market.noOrderBook')}
+            </div>
+          )}
+        </motion.div>
+
+        {/* Right: Market Stats Grid (33.33% - 5/15) */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="lg:col-span-2 card p-4"
+          className="lg:col-span-5 card p-4"
         >
           <div className="flex flex-col h-full">
-            <div className="grid grid-cols-3 gap-2 mb-4">
+            <div className="grid grid-cols-5 gap-2 mb-4">
               {stats.map((stat, i) => (
                 <div
                   key={i}
-                  className="flex flex-col items-start justify-start p-2 bg-dark-700 rounded"
+                  className="flex flex-col items-start justify-start p-2 bg-dark-700 dark:bg-dark-700 light:bg-gray-100 rounded"
                 >
                   <span className="text-xs text-gray-400 mb-1 leading-tight">{stat.label}</span>
                   <span className={`text-sm font-mono font-semibold ${stat.colorClass || 'text-gray-100'}`}>
@@ -324,7 +347,7 @@ export function EventDetail() {
         transition={{ delay: 0.25 }}
         className="card"
       >
-        <div className="border-b border-dark-600">
+        <div className="border-b border-dark-600 dark:border-dark-600 light:border-gray-200">
           <div className="flex gap-6 px-6">
             {tabs.map((tab) => (
               <button
@@ -351,7 +374,7 @@ export function EventDetail() {
           {activeTab === 'holders' && (
             <table className="w-full">
               <thead>
-                <tr className="border-b border-dark-600 text-left">
+                <tr className="border-b border-dark-600 dark:border-dark-600 light:border-gray-200 text-left">
                   <th className="pb-3 pr-4 text-xs font-medium text-gray-400 uppercase">{t('table.address')}</th>
                   <th className="pb-3 px-2 text-xs font-medium text-gray-400 uppercase text-right">{t('table.shares')}</th>
                   <th className="pb-3 px-2 text-xs font-medium text-gray-400 uppercase text-right">{t('table.value')}</th>
@@ -370,7 +393,7 @@ export function EventDetail() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.03 }}
-                    className="border-b border-dark-700 hover:bg-dark-700/30 transition-colors cursor-pointer"
+                    className="border-b border-dark-700 dark:border-dark-700 light:border-gray-100 hover:bg-dark-700/30 dark:hover:bg-dark-700/30 light:hover:bg-gray-100/30 transition-colors cursor-pointer"
                   >
                     <td className="py-3 pr-4">
                       <button
@@ -405,7 +428,7 @@ export function EventDetail() {
           {activeTab === 'traders' && (
             <table className="w-full">
               <thead>
-                <tr className="border-b border-dark-600 text-left">
+                <tr className="border-b border-dark-600 dark:border-dark-600 light:border-gray-200 text-left">
                   <th className="pb-3 pr-4 text-xs font-medium text-gray-400 uppercase">{t('table.address')}</th>
                   <th className="pb-3 px-2 text-xs font-medium text-gray-400 uppercase text-right">{t('table.shares')}</th>
                   <th className="pb-3 px-2 text-xs font-medium text-gray-400 uppercase text-right">{t('table.value')}</th>
@@ -424,7 +447,7 @@ export function EventDetail() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.03 }}
-                    className="border-b border-dark-700 hover:bg-dark-700/30 transition-colors cursor-pointer"
+                    className="border-b border-dark-700 dark:border-dark-700 light:border-gray-100 hover:bg-dark-700/30 dark:hover:bg-dark-700/30 light:hover:bg-gray-100/30 transition-colors cursor-pointer"
                   >
                     <td className="py-3 pr-4">
                       <button
@@ -459,7 +482,7 @@ export function EventDetail() {
           {activeTab === 'activity' && (
             <table className="w-full">
               <thead>
-                <tr className="border-b border-dark-600 text-left">
+                <tr className="border-b border-dark-600 dark:border-dark-600 light:border-gray-200 text-left">
                   <th className="pb-3 pr-4 text-xs font-medium text-gray-400 uppercase">{t('table.time')}</th>
                   <th className="pb-3 px-2 text-xs font-medium text-gray-400 uppercase">{t('table.address')}</th>
                   <th className="pb-3 px-2 text-xs font-medium text-gray-400 uppercase">{t('table.type')}</th>
@@ -476,7 +499,7 @@ export function EventDetail() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: trade.id * 0.02 }}
-                    className="border-b border-dark-700 hover:bg-dark-700/30 transition-colors"
+                    className="border-b border-dark-700 dark:border-dark-700 light:border-gray-100 hover:bg-dark-700/30 dark:hover:bg-dark-700/30 light:hover:bg-gray-100/30 transition-colors cursor-pointer"
                   >
                     <td className="py-3 pr-4">
                       <div className="text-sm text-gray-300">{trade.timestamp}</div>

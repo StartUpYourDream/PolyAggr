@@ -69,7 +69,7 @@ export function OrderBook({ orderBook, maxLevels = 10 }: OrderBookProps) {
       </div>
 
       {/* 当前价格 - 固定在中间 */}
-      <div className="py-2 border-y border-dark-600 flex items-center justify-between px-2 bg-dark-800">
+      <div className="py-2 border-y border-dark-600 dark:border-dark-600 light:border-gray-200 flex items-center justify-between px-2 bg-dark-800 dark:bg-dark-800 light:bg-gray-100">
         <div className="flex flex-col items-start">
           <div className="text-lg font-bold text-gray-100 font-mono tabular-nums">
             {(currentPrice * 100).toFixed(1)}¢
