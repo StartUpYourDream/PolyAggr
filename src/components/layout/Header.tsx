@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import { useI18n, useTranslation } from '../../i18n'
 
-const SEARCH_HISTORY_KEY = 'polyaggr_search_history'
+const SEARCH_HISTORY_KEY = 'probdata_search_history'
 const MAX_HISTORY_ITEMS = 5
 
 export function Header() {
@@ -80,7 +80,7 @@ export function Header() {
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <span className="text-dark-900 font-bold text-lg">P</span>
           </div>
-          <span className="font-semibold text-xl text-gray-100">PolyAggr</span>
+          <span className="font-semibold text-xl text-gray-100">ProbData</span>
         </Link>
 
         {/* Search Bar */}

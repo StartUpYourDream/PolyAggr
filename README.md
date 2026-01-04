@@ -1,6 +1,6 @@
-# PolyAggr - Polymarket Data Aggregation Platform
+# ProbData - Prediction Market Data Platform
 
-A professional prediction market data aggregation platform focused on Polymarket, providing deep analytics and professional trading data.
+A professional prediction market data platform focused on Polymarket, providing deep analytics and professional trading insights.
 
 ## Features
 
