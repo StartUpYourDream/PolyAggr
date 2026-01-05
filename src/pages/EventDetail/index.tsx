@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useMarket, useOrderBook, usePriceHistory } from '../../hooks'
 import { OrderBook } from '../../components/orderbook'
 import { PriceChart } from '../../components/charts'
+import { DataItemWithTooltip } from '../../components/common'
 import { formatCurrency, formatPercent, formatTimestamp } from '../../utils'
 import { calculateDepth, calculateDepthSkew } from '../../utils'
 import { useTranslation } from '../../i18n'
@@ -241,14 +242,14 @@ export function EventDetail() {
 
   // Market stats 数据
   const stats = [
-    { label: t('stats.volume24h'), value: formatCurrency(volume24h) },
-    { label: t('stats.openInterest'), value: formatCurrency(openInterest) },
-    { label: t('stats.bidDepth'), value: formatCurrency(bidDepth), colorClass: 'text-success' },
-    { label: t('stats.askDepth'), value: formatCurrency(askDepth), colorClass: 'text-danger' },
-    { label: t('stats.depthSkew'), value: formatPercent(depthSkew * 100), colorClass: depthSkew >= 0 ? 'text-success' : 'text-danger' },
-    { label: t('stats.priceChange24h'), value: formatPercent(priceChange24h), colorClass: priceChange24h >= 0 ? 'text-success' : 'text-danger' },
-    { label: t('stats.yesPrice'), value: `${(yesPrice * 100).toFixed(1)}¢`, colorClass: 'text-success' },
-    { label: t('stats.noPrice'), value: `${(noPrice * 100).toFixed(1)}¢`, colorClass: 'text-danger' },
+    { label: t('stats.volume24h'), value: formatCurrency(volume24h), tooltip: t('eventDetail.tooltips.volume24h') },
+    { label: t('stats.openInterest'), value: formatCurrency(openInterest), tooltip: t('eventDetail.tooltips.openInterest') },
+    { label: t('stats.bidDepth'), value: formatCurrency(bidDepth), colorClass: 'text-success', tooltip: t('eventDetail.tooltips.bidDepth') },
+    { label: t('stats.askDepth'), value: formatCurrency(askDepth), colorClass: 'text-danger', tooltip: t('eventDetail.tooltips.askDepth') },
+    { label: t('stats.depthSkew'), value: formatPercent(depthSkew * 100), colorClass: depthSkew >= 0 ? 'text-success' : 'text-danger', tooltip: t('eventDetail.tooltips.depthSkew') },
+    { label: t('stats.priceChange24h'), value: formatPercent(priceChange24h), colorClass: priceChange24h >= 0 ? 'text-success' : 'text-danger', tooltip: t('eventDetail.tooltips.priceChange24h') },
+    { label: t('stats.yesPrice'), value: `${(yesPrice * 100).toFixed(1)}¢`, colorClass: 'text-success', tooltip: t('eventDetail.tooltips.yesPrice') },
+    { label: t('stats.noPrice'), value: `${(noPrice * 100).toFixed(1)}¢`, colorClass: 'text-danger', tooltip: t('eventDetail.tooltips.noPrice') },
   ]
 
   const tabs: { key: Tab; label: string }[] = [
@@ -379,15 +380,13 @@ export function EventDetail() {
             <h3 className="text-sm font-semibold text-gray-200 mb-3">{t('market.dataOverview')}</h3>
             <div className="grid grid-cols-4 gap-2">
               {stats.slice(0, 4).map((stat, i) => (
-                <div
+                <DataItemWithTooltip
                   key={i}
-                  className="flex flex-col items-center justify-center p-2 bg-dark-700 dark:bg-dark-700 light:bg-gray-100 rounded border border-dark-600 dark:border-dark-600 light:border-gray-200"
-                >
-                  <span className="text-xs text-gray-400 mb-1 text-center leading-tight">{stat.label}</span>
-                  <span className={`text-sm font-mono font-semibold ${stat.colorClass || 'text-gray-100'}`}>
-                    {stat.value}
-                  </span>
-                </div>
+                  label={stat.label}
+                  value={stat.value}
+                  tooltip={stat.tooltip}
+                  colorClass={stat.colorClass}
+                />
               ))}
             </div>
           </div>
@@ -427,15 +426,14 @@ export function EventDetail() {
               <h3 className="text-sm font-semibold text-gray-200 mb-3">{t('market.yesData')}</h3>
               <div className={`grid gap-2 ${market.outcomes.length === 3 ? 'grid-cols-2' : 'grid-cols-4'}`}>
                 {stats.slice(0, market.outcomes.length === 3 ? 6 : 8).map((stat, i) => (
-                  <div
+                  <DataItemWithTooltip
                     key={i}
-                    className="flex flex-col items-center justify-center p-2 bg-dark-700 dark:bg-dark-700 light:bg-gray-100 rounded border border-dark-600 dark:border-dark-600 light:border-gray-200 h-16"
-                  >
-                    <span className="text-xs text-gray-400 mb-1 text-center leading-tight">{stat.label}</span>
-                    <span className={`text-xs font-mono font-semibold ${stat.colorClass || 'text-gray-100'}`}>
-                      {stat.value}
-                    </span>
-                  </div>
+                    label={stat.label}
+                    value={stat.value}
+                    tooltip={stat.tooltip}
+                    colorClass={stat.colorClass}
+                    className="h-16"
+                  />
                 ))}
               </div>
             </div>
@@ -474,15 +472,14 @@ export function EventDetail() {
                 <h3 className="text-sm font-semibold text-gray-200 mb-3">{t('market.drawData')}</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {stats.slice(0, 6).map((stat, i) => (
-                    <div
+                    <DataItemWithTooltip
                       key={i}
-                      className="flex flex-col items-center justify-center p-2 bg-dark-700 dark:bg-dark-700 light:bg-gray-100 rounded border border-dark-600 dark:border-dark-600 light:border-gray-200 h-16"
-                    >
-                      <span className="text-xs text-gray-400 mb-1 text-center leading-tight">{stat.label}</span>
-                      <span className={`text-xs font-mono font-semibold ${stat.colorClass || 'text-gray-100'}`}>
-                        {stat.value}
-                      </span>
-                    </div>
+                      label={stat.label}
+                      value={stat.value}
+                      tooltip={stat.tooltip}
+                      colorClass={stat.colorClass}
+                      className="h-16"
+                    />
                   ))}
                 </div>
               </div>
@@ -521,15 +518,14 @@ export function EventDetail() {
               <h3 className="text-sm font-semibold text-gray-200 mb-3">{t('market.noData')}</h3>
               <div className={`grid gap-2 ${market.outcomes.length === 3 ? 'grid-cols-2' : 'grid-cols-4'}`}>
                 {stats.slice(0, market.outcomes.length === 3 ? 6 : 8).map((stat, i) => (
-                  <div
+                  <DataItemWithTooltip
                     key={i}
-                    className="flex flex-col items-center justify-center p-2 bg-dark-700 dark:bg-dark-700 light:bg-gray-100 rounded border border-dark-600 dark:border-dark-600 light:border-gray-200 h-16"
-                  >
-                    <span className="text-xs text-gray-400 mb-1 text-center leading-tight">{stat.label}</span>
-                    <span className={`text-xs font-mono font-semibold ${stat.colorClass || 'text-gray-100'}`}>
-                      {stat.value}
-                    </span>
-                  </div>
+                    label={stat.label}
+                    value={stat.value}
+                    tooltip={stat.tooltip}
+                    colorClass={stat.colorClass}
+                    className="h-16"
+                  />
                 ))}
               </div>
             </div>
