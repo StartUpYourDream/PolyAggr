@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useEffect, useRef } from 'react'
 import type { OrderBook as OrderBookType } from '../../types'
 import { calculateSpread } from '../../utils'
 import { useTranslation } from '../../i18n'
@@ -10,8 +11,16 @@ interface OrderBookProps {
 
 export function OrderBook({ orderBook, maxLevels = 10 }: OrderBookProps) {
   const { t } = useTranslation()
+  const asksScrollRef = useRef<HTMLDivElement>(null)
   const bids = orderBook.bids.slice(0, maxLevels)
   const asks = orderBook.asks.slice(0, maxLevels).reverse()
+
+  // Scroll asks to bottom on mount and when data changes
+  useEffect(() => {
+    if (asksScrollRef.current) {
+      asksScrollRef.current.scrollTop = asksScrollRef.current.scrollHeight
+    }
+  }, [orderBook.asks])
 
   // 计算最大深度用于可视化
   const maxSize = Math.max(
@@ -31,9 +40,9 @@ export function OrderBook({ orderBook, maxLevels = 10 }: OrderBookProps) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Asks (卖单) - 可滚动 */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-dark-600 scrollbar-track-dark-800">
-        <div className="flex flex-col-reverse space-y-reverse space-y-0.5">
+      {/* Asks (卖单) - 显示5行，可滚动 */}
+      <div ref={asksScrollRef} className="h-[136px] overflow-y-auto scrollbar-thin scrollbar-thumb-dark-600 scrollbar-track-dark-800 py-1">
+        <div className="flex flex-col-reverse gap-0.5">
           {asks.map((ask, index) => {
             const price = parseFloat(ask.price)
             const size = parseFloat(ask.size)
@@ -45,7 +54,7 @@ export function OrderBook({ orderBook, maxLevels = 10 }: OrderBookProps) {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.02 }}
-                className="relative flex justify-between items-center text-xs py-0.5 px-2 rounded"
+                className="relative flex justify-between items-center text-xs py-1 px-2 rounded h-[24px]"
               >
                 {/* 背景条 */}
                 <div
@@ -84,9 +93,9 @@ export function OrderBook({ orderBook, maxLevels = 10 }: OrderBookProps) {
         </div>
       </div>
 
-      {/* Bids (买单) - 可滚动 */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-dark-600 scrollbar-track-dark-800">
-        <div className="flex flex-col space-y-0.5">
+      {/* Bids (买单) - 显示5行，可滚动 */}
+      <div className="h-[136px] overflow-y-auto scrollbar-thin scrollbar-thumb-dark-600 scrollbar-track-dark-800 py-1">
+        <div className="flex flex-col gap-0.5">
           {bids.map((bid, index) => {
             const price = parseFloat(bid.price)
             const size = parseFloat(bid.size)
@@ -98,7 +107,7 @@ export function OrderBook({ orderBook, maxLevels = 10 }: OrderBookProps) {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.02 }}
-                className="relative flex justify-between items-center text-xs py-0.5 px-2 rounded"
+                className="relative flex justify-between items-center text-xs py-1 px-2 rounded h-[24px]"
               >
                 {/* 背景条 */}
                 <div

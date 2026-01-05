@@ -1,16 +1,16 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useMarket, useOrderBook, usePriceHistory } from '../../hooks'
 import { OrderBook } from '../../components/orderbook'
 import { PriceChart } from '../../components/charts'
-import { formatCountdown, formatCurrency, formatPercent, getMarketUrl, formatTimestamp } from '../../utils'
+import { formatCurrency, formatPercent, formatTimestamp } from '../../utils'
 import { calculateDepth, calculateDepthSkew } from '../../utils'
 import { useTranslation } from '../../i18n'
 
 type Tab = 'holders' | 'traders' | 'activity'
 
-// Mock data for tabs
+// Mock data generators
 const generateMockHolders = () => {
   return Array.from({ length: 10 }, () => {
     const shares = Math.floor(Math.random() * 10000 + 100)
@@ -37,18 +37,18 @@ const generateMockHolders = () => {
 
 const generateMockTraders = () => {
   return Array.from({ length: 10 }, () => {
-    const shares = Math.floor(Math.random() * 5000 + 100)
+    const buyCount = Math.floor(Math.random() * 20 + 1)
+    const sellCount = Math.floor(Math.random() * 15 + 1)
     const avgBuyPrice = +(Math.random() * 0.6 + 0.2).toFixed(3)
     const avgSellPrice = avgBuyPrice > 0.5 ? +(avgBuyPrice + Math.random() * 0.1).toFixed(3) : +(avgBuyPrice - Math.random() * 0.1).toFixed(3)
-    const value = +(shares * avgBuyPrice).toFixed(2)
     const realizedPnl = (Math.random() - 0.3) * 10000
     const unrealizedPnl = (Math.random() - 0.3) * 8000
-    const totalInvested = value - unrealizedPnl
+    const totalInvested = Math.abs(realizedPnl) + Math.abs(unrealizedPnl)
 
     return {
       address: `0x${Math.random().toString(16).slice(2, 10)}...${Math.random().toString(16).slice(2, 6)}`,
-      shares,
-      value,
+      buyCount,
+      sellCount,
       avgBuyPrice,
       avgSellPrice,
       realizedPnl,
@@ -65,18 +65,18 @@ const generateMockActivity = () => {
     const price = +(Math.random() * 0.6 + 0.2).toFixed(3)
     const now = Date.now()
     const timestamp = now - Math.floor(Math.random() * 3600000) // Within last hour
-    const date = new Date(timestamp)
+    const minutesAgo = Math.floor(Math.random() * 60)
 
     return {
       id: i,
-      type: ['BUY', 'SELL'][Math.floor(Math.random() * 2)],
-      outcome: ['YES', 'NO'][Math.floor(Math.random() * 2)],
+      type: ['buy', 'sell'][Math.floor(Math.random() * 2)] as 'buy' | 'sell',
+      outcome: ['yes', 'no'][Math.floor(Math.random() * 2)] as 'yes' | 'no',
       shares,
       price,
       total: +(shares * price).toFixed(2),
       address: `0x${Math.random().toString(16).slice(2, 10)}...${Math.random().toString(16).slice(2, 6)}`,
-      timestamp: formatTimestamp(date),
-      timeAgo: `${Math.floor(Math.random() * 60)}分钟前`,
+      timestamp,
+      timeAgo: `${minutesAgo}${minutesAgo > 0 ? '分钟前' : '刚刚'}`,
       txHash: `0x${Math.random().toString(16).slice(2, 66)}`,
     }
   })
@@ -87,6 +87,7 @@ export function EventDetail() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<Tab>('activity')
   const [selectedSubMarketId, setSelectedSubMarketId] = useState<string | null>(null)
+  const [countdown, setCountdown] = useState<string>('')
   const { t } = useTranslation()
 
   // 获取市场数据
@@ -97,12 +98,17 @@ export function EventDetail() {
     ? market?.markets?.find(m => m.id === selectedSubMarketId)
     : null
 
-  // 获取订单簿（只使用主市场的 token，子市场暂不支持订单簿）
-  const tokenId = market?.clob_token_ids?.[0]
-  const { data: orderBook, isLoading: orderBookLoading } = useOrderBook(tokenId)
+  // 获取订单簿（支持多个 outcome 的订单簿）
+  const yesTokenId = market?.clob_token_ids?.[0]
+  const noTokenId = market?.clob_token_ids?.[1]
+  const drawTokenId = market?.clob_token_ids?.[2] // DRAW token (如果存在)
 
-  // 获取价格历史
-  const { data: priceHistory = [] } = usePriceHistory(tokenId, '1d', 100)
+  const { data: yesOrderBook, isLoading: yesOrderBookLoading } = useOrderBook(yesTokenId)
+  const { data: noOrderBook, isLoading: noOrderBookLoading } = useOrderBook(noTokenId)
+  const { data: drawOrderBook, isLoading: drawOrderBookLoading } = useOrderBook(drawTokenId)
+
+  // 获取价格历史（使用 YES token 的价格历史）
+  const { data: priceHistory = [] } = usePriceHistory(yesTokenId, '1d', 100)
 
   // 准备图表数据
   const { chartData, isMultiLine } = useMemo(() => {
@@ -130,8 +136,64 @@ export function EventDetail() {
 
   // Mock tab data
   const holders = useMemo(() => generateMockHolders(), [])
-  const traders = useMemo(() => generateMockTraders(), [])
-  const activity = useMemo(() => generateMockActivity(), [])
+  const topTraders = useMemo(() => generateMockTraders(), [])
+  const activities = useMemo(() => generateMockActivity(), [])
+
+  // Countdown timer - updates every second
+  useEffect(() => {
+    if (!market?.end_date_iso) return
+
+    const updateCountdown = () => {
+      const endTime = new Date(market.end_date_iso).getTime()
+      const now = Date.now()
+      const diff = endTime - now
+
+      if (diff <= 0) {
+        setCountdown('00:00:00:00')
+        return
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000)
+
+      setCountdown(`${days.toString().padStart(2, '0')}:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`)
+    }
+
+    updateCountdown()
+    const interval = setInterval(updateCountdown, 1000)
+
+    return () => clearInterval(interval)
+  }, [market?.end_date_iso])
+
+  // Calculate event status
+  const getEventStatus = () => {
+    if (!market) return 'active'
+
+    // Mock logic for different statuses - in real app this would come from API
+    const endTime = market.end_date_iso ? new Date(market.end_date_iso).getTime() : Date.now() + 86400000
+    const now = Date.now()
+
+    // For demo: randomly assign status based on market state
+    if (endTime < now) {
+      // Event ended - could be disputed, under review, or resolved
+      const rand = Math.random()
+      if (rand < 0.1) return 'disputed'
+      if (rand < 0.2) return 'review'
+      return 'ended'
+    }
+
+    return 'active'
+  }
+
+  const eventStatus = getEventStatus()
+  const statusConfig = {
+    active: { label: t('market.statusActive'), colorClass: 'bg-success/20 text-success border-success/30' },
+    ended: { label: t('market.statusEnded'), colorClass: 'bg-gray-500/20 text-gray-400 border-gray-500/30' },
+    disputed: { label: t('market.statusDisputed'), colorClass: 'bg-danger/20 text-danger border-danger/30' },
+    review: { label: t('market.statusReview'), colorClass: 'bg-primary/20 text-primary border-primary/30' },
+  }
 
   if (marketLoading) {
     return (
@@ -168,9 +230,9 @@ export function EventDetail() {
     : parseFloat(market.volume24hr) || 0
   const openInterest = parseFloat(market.liquidity) || 0
 
-  // 从订单簿计算深度
-  const { bidDepth, askDepth } = orderBook
-    ? calculateDepth(orderBook, 10)
+  // 从订单簿计算深度（使用 YES 订单簿）
+  const { bidDepth, askDepth } = yesOrderBook
+    ? calculateDepth(yesOrderBook, 10)
     : { bidDepth: 0, askDepth: 0 }
 
   const depthSkew = calculateDepthSkew(bidDepth, askDepth)
@@ -197,144 +259,279 @@ export function EventDetail() {
 
   return (
     <div className="max-w-[1800px] mx-auto px-6 py-8">
-      {/* Event Header - Compact */}
+      {/* Top Section: Avatar + Title + Tags */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-4"
+        className="mb-6"
       >
-        <div className="flex items-center gap-3 mb-2">
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/20 text-primary">
-            {market.active ? t('common.active') : t('common.closed')}
-          </span>
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-dark-600 dark:bg-dark-600 light:bg-gray-200 text-gray-300 dark:text-gray-300 light:text-gray-700 capitalize">
-            {market.tags[0] || t('common.other')}
-          </span>
-          <span className="text-gray-500 text-sm">{t('market.endDate')} {formatCountdown(market.end_date_iso)}</span>
-        </div>
+        <div className="flex items-start gap-4">
+          {/* Avatar */}
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center flex-shrink-0">
+            <span className="text-white font-bold text-lg">P</span>
+          </div>
 
-        <div className="flex items-start justify-between gap-4">
-          <h1 className="text-2xl font-bold text-gray-100 flex-shrink-0">{market.question}</h1>
-
-          {/* Sub-event selector */}
-          {market.markets && market.markets.length > 0 && (
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-400 whitespace-nowrap">{t('market.subEvent')}:</span>
-              <select
-                value={selectedSubMarketId || ''}
-                onChange={(e) => setSelectedSubMarketId(e.target.value || null)}
-                className="bg-dark-700 dark:bg-dark-700 light:bg-white border border-dark-600 dark:border-dark-600 light:border-gray-300 text-gray-100 dark:text-gray-100 light:text-gray-900 text-sm rounded-lg px-3 py-2 cursor-pointer hover:bg-dark-600 dark:hover:bg-dark-600 light:hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all min-w-[200px] max-w-[400px]"
-              >
-                <option value="">{t('market.allSubEvents')}</option>
-                {market.markets.map((subMarket) => {
-                  const yesPrice = subMarket.outcomePrices?.[0] ? parseFloat(subMarket.outcomePrices[0]) : 0
-                  const noPrice = subMarket.outcomePrices?.[1] ? parseFloat(subMarket.outcomePrices[1]) : 0
-
-                  return (
-                    <option key={subMarket.id} value={subMarket.id}>
-                      {subMarket.question} - YES {(yesPrice * 100).toFixed(0)}¢ / NO {(noPrice * 100).toFixed(0)}¢
-                    </option>
-                  )
-                })}
-              </select>
+          {/* Title and Tags */}
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-gray-100 mb-2">
+              {market.question}
+            </h1>
+            <div className="text-sm text-gray-400 mb-3">
+              {selectedSubMarket ? selectedSubMarket.question : market.question}
             </div>
-          )}
+
+            <div className="flex items-center gap-3">
+              {/* Countdown Timer */}
+              <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-dark-700 dark:bg-dark-700 light:bg-gray-100 border border-dark-600 dark:border-dark-600 light:border-gray-300">
+                <span className="text-xs text-gray-400">{t('market.endTime')}:</span>
+                <span className="text-xs font-mono font-semibold text-gray-100 dark:text-gray-100 light:text-gray-900 tabular-nums">
+                  {countdown || '00:00:00:00'}
+                </span>
+              </div>
+
+              {/* Event Status */}
+              <div className={`px-3 py-1 rounded-md text-xs font-medium border ${statusConfig[eventStatus as keyof typeof statusConfig]?.colorClass || statusConfig.active.colorClass}`}>
+                {statusConfig[eventStatus as keyof typeof statusConfig]?.label || statusConfig.active.label}
+              </div>
+            </div>
+          </div>
         </div>
       </motion.div>
 
-      {/* Main Layout: 40% Chart + 13.33% YES OrderBook + 13.33% NO OrderBook + 33.33% Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-15 gap-4 mb-4">
-        {/* Left: Price Chart (40% - 6/15) */}
+      {/* Main Content: 3 columns layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_480px] gap-4 mb-4">
+        {/* Left Panel: Sub-events */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1 }}
-          className="lg:col-span-6 card p-4"
+          className="card p-4"
+        >
+          <h3 className="text-sm font-semibold text-gray-200 mb-3">{t('market.subEvents')}</h3>
+
+          {/* Sub-event buttons */}
+          <div className="space-y-2">
+            {market.markets && market.markets.length > 0 ? (
+              <>
+                <button
+                  onClick={() => setSelectedSubMarketId(null)}
+                  className={`w-full px-3 py-2 text-sm rounded-lg transition-all cursor-pointer active:scale-95 text-left ${
+                    selectedSubMarketId === null
+                      ? 'bg-primary !text-white font-medium'
+                      : 'bg-dark-700 dark:bg-dark-700 light:bg-gray-100 text-gray-300 dark:text-gray-300 light:text-gray-700 hover:bg-dark-600 dark:hover:bg-dark-600 light:hover:bg-gray-200'
+                  }`}
+                >
+                  {t('market.allSubEvents')}
+                </button>
+                {market.markets.slice(0, 6).map((subMarket, idx) => (
+                  <button
+                    key={subMarket.id}
+                    onClick={() => setSelectedSubMarketId(subMarket.id)}
+                    className={`w-full px-3 py-2 text-sm rounded-lg transition-all cursor-pointer active:scale-95 text-left ${
+                      selectedSubMarketId === subMarket.id
+                        ? 'bg-primary !text-white font-medium'
+                        : 'bg-dark-700 dark:bg-dark-700 light:bg-gray-100 text-gray-300 dark:text-gray-300 light:text-gray-700 hover:bg-dark-600 dark:hover:bg-dark-600 light:hover:bg-gray-200'
+                    }`}
+                  >
+                    {t('market.subEvent')} {idx + 1}
+                  </button>
+                ))}
+              </>
+            ) : (
+              <div className="text-xs text-gray-500 text-center py-4">
+                {t('common.noData')}
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Middle Panel: Price Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="card p-4"
         >
           <PriceChart
             data={chartData}
-            height={450}
+            height={400}
             multiLine={isMultiLine}
           />
         </motion.div>
 
-        {/* Middle Left: YES OrderBook (13.33% - 2/15) */}
+        {/* Right Panel: Event Description + Data Overview */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.15 }}
-          className="lg:col-span-2 card p-4 pb-2"
-        >
-          <h2 className="text-base font-semibold text-success mb-3 text-center">{t('market.yesOrderBook')}</h2>
-          {orderBookLoading ? (
-            <div className="h-[420px] flex items-center justify-center">
-              <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-            </div>
-          ) : orderBook ? (
-            <div className="h-[420px]">
-              <OrderBook orderBook={orderBook} maxLevels={25} />
-            </div>
-          ) : (
-            <div className="h-[420px] flex items-center justify-center text-gray-500 text-sm">
-              {t('market.noOrderBook')}
-            </div>
-          )}
-        </motion.div>
-
-        {/* Middle Right: NO OrderBook (13.33% - 2/15) */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.175 }}
-          className="lg:col-span-2 card p-4 pb-2"
-        >
-          <h2 className="text-base font-semibold text-danger mb-3 text-center">{t('market.noOrderBookTitle')}</h2>
-          {orderBookLoading ? (
-            <div className="h-[420px] flex items-center justify-center">
-              <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-            </div>
-          ) : orderBook ? (
-            <div className="h-[420px]">
-              <OrderBook orderBook={orderBook} maxLevels={25} />
-            </div>
-          ) : (
-            <div className="h-[420px] flex items-center justify-center text-gray-500 text-sm">
-              {t('market.noOrderBook')}
-            </div>
-          )}
-        </motion.div>
-
-        {/* Right: Market Stats Grid (33.33% - 5/15) */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
-          className="lg:col-span-5 card p-4"
+          className="space-y-4"
         >
-          <div className="flex flex-col h-full">
-            <div className="grid grid-cols-5 gap-2 mb-4">
-              {stats.map((stat, i) => (
+          {/* Event Description */}
+          <div className="card p-4">
+            <h3 className="text-sm font-semibold text-gray-200 mb-2">{t('market.description')}</h3>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              {t('market.descriptionPlaceholder')}
+            </p>
+          </div>
+
+          {/* Data Overview */}
+          <div className="card p-4">
+            <h3 className="text-sm font-semibold text-gray-200 mb-3">{t('market.dataOverview')}</h3>
+            <div className="grid grid-cols-4 gap-2">
+              {stats.slice(0, 4).map((stat, i) => (
                 <div
                   key={i}
-                  className="flex flex-col items-start justify-start p-2 bg-dark-700 dark:bg-dark-700 light:bg-gray-100 rounded"
+                  className="flex flex-col items-center justify-center p-2 bg-dark-700 dark:bg-dark-700 light:bg-gray-100 rounded border border-dark-600 dark:border-dark-600 light:border-gray-200"
                 >
-                  <span className="text-xs text-gray-400 mb-1 leading-tight">{stat.label}</span>
+                  <span className="text-xs text-gray-400 mb-1 text-center leading-tight">{stat.label}</span>
                   <span className={`text-sm font-mono font-semibold ${stat.colorClass || 'text-gray-100'}`}>
                     {stat.value}
                   </span>
                 </div>
               ))}
             </div>
-            {/* Trade Button - at bottom */}
-            <div className="mt-auto">
-              <a
-                href={getMarketUrl(market.market_slug)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-primary w-full text-center block text-sm"
-              >
-                {t('market.tradeOn')} →
-              </a>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Order Books Section: YES, DRAW (conditional), and NO */}
+      <div className={`grid grid-cols-1 gap-4 mb-4 ${market.outcomes.length === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
+        {/* YES Section */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.25 }}
+          className="card p-4"
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-3">
+            {/* YES OrderBook */}
+            <div>
+              <h2 className="text-sm font-semibold text-success mb-3">{t('market.yesOrderBook')}</h2>
+              {yesOrderBookLoading ? (
+                <div className="h-[340px] flex items-center justify-center">
+                  <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                </div>
+              ) : yesOrderBook ? (
+                <div className="h-[340px]">
+                  <OrderBook orderBook={yesOrderBook} maxLevels={20} />
+                </div>
+              ) : (
+                <div className="h-[340px] flex items-center justify-center text-gray-500 text-sm">
+                  {t('market.noOrderBook')}
+                </div>
+              )}
+            </div>
+
+            {/* Yes Data Stats */}
+            <div className="w-full">
+              <h3 className="text-sm font-semibold text-gray-200 mb-3">{t('market.yesData')}</h3>
+              <div className={`grid gap-2 ${market.outcomes.length === 3 ? 'grid-cols-2' : 'grid-cols-4'}`}>
+                {stats.slice(0, market.outcomes.length === 3 ? 6 : 8).map((stat, i) => (
+                  <div
+                    key={i}
+                    className="flex flex-col items-center justify-center p-2 bg-dark-700 dark:bg-dark-700 light:bg-gray-100 rounded border border-dark-600 dark:border-dark-600 light:border-gray-200 h-16"
+                  >
+                    <span className="text-xs text-gray-400 mb-1 text-center leading-tight">{stat.label}</span>
+                    <span className={`text-xs font-mono font-semibold ${stat.colorClass || 'text-gray-100'}`}>
+                      {stat.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* DRAW Section - Conditional rendering based on outcomes length */}
+        {market.outcomes.length === 3 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.275 }}
+            className="card p-4"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-3">
+              {/* DRAW OrderBook */}
+              <div>
+                <h2 className="text-sm font-semibold text-primary mb-3">{t('market.drawOrderBook')}</h2>
+                {drawOrderBookLoading ? (
+                  <div className="h-[340px] flex items-center justify-center">
+                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                  </div>
+                ) : drawOrderBook ? (
+                  <div className="h-[340px]">
+                    <OrderBook orderBook={drawOrderBook} maxLevels={20} />
+                  </div>
+                ) : (
+                  <div className="h-[340px] flex items-center justify-center text-gray-500 text-sm">
+                    {t('market.noOrderBook')}
+                  </div>
+                )}
+              </div>
+
+              {/* Draw Data Stats */}
+              <div className="w-full">
+                <h3 className="text-sm font-semibold text-gray-200 mb-3">{t('market.drawData')}</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {stats.slice(0, 6).map((stat, i) => (
+                    <div
+                      key={i}
+                      className="flex flex-col items-center justify-center p-2 bg-dark-700 dark:bg-dark-700 light:bg-gray-100 rounded border border-dark-600 dark:border-dark-600 light:border-gray-200 h-16"
+                    >
+                      <span className="text-xs text-gray-400 mb-1 text-center leading-tight">{stat.label}</span>
+                      <span className={`text-xs font-mono font-semibold ${stat.colorClass || 'text-gray-100'}`}>
+                        {stat.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* NO Section */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="card p-4"
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-3">
+            {/* NO OrderBook */}
+            <div>
+              <h2 className="text-sm font-semibold text-danger mb-3">{t('market.noOrderBookTitle')}</h2>
+              {noOrderBookLoading ? (
+                <div className="h-[340px] flex items-center justify-center">
+                  <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                </div>
+              ) : noOrderBook ? (
+                <div className="h-[340px]">
+                  <OrderBook orderBook={noOrderBook} maxLevels={20} />
+                </div>
+              ) : (
+                <div className="h-[340px] flex items-center justify-center text-gray-500 text-sm">
+                  {t('market.noOrderBook')}
+                </div>
+              )}
+            </div>
+
+            {/* No Data Stats */}
+            <div className="w-full">
+              <h3 className="text-sm font-semibold text-gray-200 mb-3">{t('market.noData')}</h3>
+              <div className={`grid gap-2 ${market.outcomes.length === 3 ? 'grid-cols-2' : 'grid-cols-4'}`}>
+                {stats.slice(0, market.outcomes.length === 3 ? 6 : 8).map((stat, i) => (
+                  <div
+                    key={i}
+                    className="flex flex-col items-center justify-center p-2 bg-dark-700 dark:bg-dark-700 light:bg-gray-100 rounded border border-dark-600 dark:border-dark-600 light:border-gray-200 h-16"
+                  >
+                    <span className="text-xs text-gray-400 mb-1 text-center leading-tight">{stat.label}</span>
+                    <span className={`text-xs font-mono font-semibold ${stat.colorClass || 'text-gray-100'}`}>
+                      {stat.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </motion.div>
@@ -344,7 +541,7 @@ export function EventDetail() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.25 }}
+        transition={{ delay: 0.35 }}
         className="card"
       >
         <div className="border-b border-dark-600 dark:border-dark-600 light:border-gray-200">
@@ -356,7 +553,7 @@ export function EventDetail() {
                 className={`py-3 text-sm font-medium transition-all relative cursor-pointer active:scale-95 ${
                   activeTab === tab.key
                     ? 'text-primary'
-                    : 'text-gray-400 hover:text-gray-200'
+                    : 'text-gray-400 dark:text-gray-400 light:text-gray-600 hover:text-gray-100 dark:hover:text-gray-100 light:hover:text-gray-900'
                 }`}
               >
                 {tab.label}
@@ -430,8 +627,8 @@ export function EventDetail() {
               <thead>
                 <tr className="border-b border-dark-600 dark:border-dark-600 light:border-gray-200 text-left">
                   <th className="pb-3 pr-4 text-xs font-medium text-gray-400 uppercase">{t('table.address')}</th>
-                  <th className="pb-3 px-2 text-xs font-medium text-gray-400 uppercase text-right">{t('table.shares')}</th>
-                  <th className="pb-3 px-2 text-xs font-medium text-gray-400 uppercase text-right">{t('table.value')}</th>
+                  <th className="pb-3 px-2 text-xs font-medium text-gray-400 uppercase text-right">{t('table.buyCount')}</th>
+                  <th className="pb-3 px-2 text-xs font-medium text-gray-400 uppercase text-right">{t('table.sellCount')}</th>
                   <th className="pb-3 px-2 text-xs font-medium text-gray-400 uppercase text-right">{t('table.avgBuyPrice')}</th>
                   <th className="pb-3 px-2 text-xs font-medium text-gray-400 uppercase text-right">{t('table.avgSellPrice')}</th>
                   <th className="pb-3 px-2 text-xs font-medium text-gray-400 uppercase text-right">{t('table.realizedPnl')}</th>
@@ -441,7 +638,7 @@ export function EventDetail() {
                 </tr>
               </thead>
               <tbody>
-                {traders.map((trader, i) => (
+                {topTraders.map((trader, i) => (
                   <motion.tr
                     key={i}
                     initial={{ opacity: 0, y: 10 }}
@@ -457,8 +654,8 @@ export function EventDetail() {
                         {trader.address}
                       </button>
                     </td>
-                    <td className="py-3 px-2 text-right font-mono text-gray-300 text-sm">{trader.shares.toLocaleString()}</td>
-                    <td className="py-3 px-2 text-right font-mono text-gray-100 text-sm">${trader.value.toLocaleString()}</td>
+                    <td className="py-3 px-2 text-right font-mono text-gray-300 text-sm">{trader.buyCount}</td>
+                    <td className="py-3 px-2 text-right font-mono text-gray-300 text-sm">{trader.sellCount}</td>
                     <td className="py-3 px-2 text-right font-mono text-gray-300 text-sm">${trader.avgBuyPrice.toFixed(3)}</td>
                     <td className="py-3 px-2 text-right font-mono text-gray-300 text-sm">${trader.avgSellPrice.toFixed(3)}</td>
                     <td className={`py-3 px-2 text-right font-mono text-sm ${trader.realizedPnl >= 0 ? 'text-success' : 'text-danger'}`}>
@@ -485,52 +682,60 @@ export function EventDetail() {
                 <tr className="border-b border-dark-600 dark:border-dark-600 light:border-gray-200 text-left">
                   <th className="pb-3 pr-4 text-xs font-medium text-gray-400 uppercase">{t('table.time')}</th>
                   <th className="pb-3 px-2 text-xs font-medium text-gray-400 uppercase">{t('table.address')}</th>
-                  <th className="pb-3 px-2 text-xs font-medium text-gray-400 uppercase">{t('table.type')}</th>
-                  <th className="pb-3 px-2 text-xs font-medium text-gray-400 uppercase text-right">{t('table.price')}</th>
+                  <th className="pb-3 px-2 text-xs font-medium text-gray-400 uppercase text-center">{t('table.type')}</th>
                   <th className="pb-3 px-2 text-xs font-medium text-gray-400 uppercase text-right">{t('table.shares')}</th>
+                  <th className="pb-3 px-2 text-xs font-medium text-gray-400 uppercase text-right">{t('table.price')}</th>
                   <th className="pb-3 px-2 text-xs font-medium text-gray-400 uppercase text-right">{t('table.total')}</th>
                   <th className="pb-3 pl-2 text-xs font-medium text-gray-400 uppercase text-right">{t('table.txHash')}</th>
                 </tr>
               </thead>
               <tbody>
-                {activity.map((trade) => (
+                {activities.map((activity, i) => (
                   <motion.tr
-                    key={trade.id}
+                    key={i}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: trade.id * 0.02 }}
+                    transition={{ delay: i * 0.03 }}
                     className="border-b border-dark-700 dark:border-dark-700 light:border-gray-100 hover:bg-dark-700/30 dark:hover:bg-dark-700/30 light:hover:bg-gray-100/30 transition-colors cursor-pointer"
                   >
-                    <td className="py-3 pr-4">
-                      <div className="text-sm text-gray-300">{trade.timestamp}</div>
-                      <div className="text-xs text-gray-500">{trade.timeAgo}</div>
-                    </td>
+                    <td className="py-3 pr-4 text-gray-400 text-xs font-mono">{formatTimestamp(activity.timestamp)}</td>
                     <td className="py-3 px-2">
                       <button
-                        onClick={() => navigate(`/user/${trade.address}`)}
+                        onClick={() => navigate(`/user/${activity.address}`)}
                         className="text-primary hover:text-primary/80 font-mono text-sm transition-all cursor-pointer active:scale-95"
                       >
-                        {trade.address}
+                        {activity.address}
                       </button>
                     </td>
                     <td className="py-3 px-2">
-                      <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${
-                        trade.type === 'BUY' ? 'bg-success/20 text-success' : 'bg-danger/20 text-danger'
-                      }`}>
-                        {trade.type === 'BUY' ? t('table.buy') : t('table.sell')} {trade.outcome === 'YES' ? t('table.yes') : t('table.no')}
-                      </span>
+                      <div className="flex items-center justify-center gap-2">
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                          activity.type === 'buy'
+                            ? 'bg-success/10 text-success'
+                            : 'bg-danger/10 text-danger'
+                        }`}>
+                          {activity.type === 'buy' ? t('table.buy') : t('table.sell')}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                          activity.outcome === 'yes'
+                            ? 'bg-success/10 text-success'
+                            : 'bg-primary/10 text-primary'
+                        }`}>
+                          {activity.outcome === 'yes' ? t('table.yes') : t('table.no')}
+                        </span>
+                      </div>
                     </td>
-                    <td className="py-3 px-2 text-right font-mono text-gray-300 text-sm">${trade.price.toFixed(3)}</td>
-                    <td className="py-3 px-2 text-right font-mono text-gray-300 text-sm">{trade.shares.toLocaleString()}</td>
-                    <td className="py-3 px-2 text-right font-mono text-gray-100 text-sm">${trade.total.toFixed(2)}</td>
+                    <td className="py-3 px-2 text-right font-mono text-gray-300 text-sm">{activity.shares.toLocaleString()}</td>
+                    <td className="py-3 px-2 text-right font-mono text-gray-100 text-sm">${activity.price.toFixed(3)}</td>
+                    <td className="py-3 px-2 text-right font-mono text-gray-100 text-sm">${activity.total.toFixed(2)}</td>
                     <td className="py-3 pl-2 text-right">
                       <a
-                        href={`https://polygonscan.com/tx/${trade.txHash}`}
+                        href={`https://polygonscan.com/tx/${activity.txHash}`}
                         target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:text-primary/80 font-mono text-xs transition-colors inline-block"
+                        rel="noreferrer"
+                        className="text-primary hover:text-primary/80 font-mono text-xs transition-all"
                       >
-                        {trade.txHash.slice(0, 10)}...{trade.txHash.slice(-8)}
+                        {activity.txHash.slice(0, 10)}...
                       </a>
                     </td>
                   </motion.tr>

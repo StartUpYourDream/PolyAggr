@@ -106,8 +106,99 @@ function generateMockMarket(id: number, category: string): Market {
   const question = categoryQuestions[id % categoryQuestions.length]
 
   const baseVolume = Math.random() * 5000000 + 100000
-  const yesPrice = 0.2 + Math.random() * 0.6
-  const noPrice = 1 - yesPrice
+
+  // 为 id 为 5 的倍数的市场创建 3 个 outcomes (YES, NO, DRAW)
+  const hasDraw = id % 5 === 0
+
+  let yesPrice: number, noPrice: number, drawPrice: number
+  let outcomes: any[], tokens: any[], clobTokenIds: string[]
+
+  if (hasDraw) {
+    // 3 outcomes 市场
+    yesPrice = 0.2 + Math.random() * 0.3  // 20-50%
+    drawPrice = 0.15 + Math.random() * 0.25  // 15-40%
+    noPrice = 1 - yesPrice - drawPrice
+
+    outcomes = [
+      {
+        id: `outcome-yes-${id}`,
+        price: yesPrice.toString(),
+        size: (Math.random() * 100000).toString(),
+        price_change_percent: (Math.random() * 20 - 10),
+      },
+      {
+        id: `outcome-no-${id}`,
+        price: noPrice.toString(),
+        size: (Math.random() * 100000).toString(),
+        price_change_percent: (Math.random() * 20 - 10),
+      },
+      {
+        id: `outcome-draw-${id}`,
+        price: drawPrice.toString(),
+        size: (Math.random() * 100000).toString(),
+        price_change_percent: (Math.random() * 20 - 10),
+      },
+    ]
+
+    tokens = [
+      {
+        token_id: `token-yes-${id}`,
+        outcome: 'YES',
+        price: yesPrice.toString(),
+        winner: false,
+      },
+      {
+        token_id: `token-no-${id}`,
+        outcome: 'NO',
+        price: noPrice.toString(),
+        winner: false,
+      },
+      {
+        token_id: `token-draw-${id}`,
+        outcome: 'DRAW',
+        price: drawPrice.toString(),
+        winner: false,
+      },
+    ]
+
+    clobTokenIds = [`token-yes-${id}`, `token-no-${id}`, `token-draw-${id}`]
+  } else {
+    // 2 outcomes 市场 (原有逻辑)
+    yesPrice = 0.2 + Math.random() * 0.6
+    noPrice = 1 - yesPrice
+
+    outcomes = [
+      {
+        id: `outcome-yes-${id}`,
+        price: yesPrice.toString(),
+        size: (Math.random() * 100000).toString(),
+        price_change_percent: (Math.random() * 20 - 10),
+      },
+      {
+        id: `outcome-no-${id}`,
+        price: noPrice.toString(),
+        size: (Math.random() * 100000).toString(),
+        price_change_percent: (Math.random() * 20 - 10),
+      },
+    ]
+
+    tokens = [
+      {
+        token_id: `token-yes-${id}`,
+        outcome: 'YES',
+        price: yesPrice.toString(),
+        winner: false,
+      },
+      {
+        token_id: `token-no-${id}`,
+        outcome: 'NO',
+        price: noPrice.toString(),
+        winner: false,
+      },
+    ]
+
+    clobTokenIds = [`token-yes-${id}`, `token-no-${id}`]
+  }
 
   return {
     id: `market-${id}`,
@@ -139,34 +230,8 @@ function generateMockMarket(id: number, category: string): Market {
     accepting_order_timestamp: new Date().toISOString(),
     minimum_tick_size: 0.01,
     minimum_order_size: 1,
-    outcomes: [
-      {
-        id: `outcome-yes-${id}`,
-        price: yesPrice.toString(),
-        size: (Math.random() * 100000).toString(),
-        price_change_percent: (Math.random() * 20 - 10),
-      },
-      {
-        id: `outcome-no-${id}`,
-        price: noPrice.toString(),
-        size: (Math.random() * 100000).toString(),
-        price_change_percent: (Math.random() * 20 - 10),
-      },
-    ],
-    tokens: [
-      {
-        token_id: `token-yes-${id}`,
-        outcome: 'YES',
-        price: yesPrice.toString(),
-        winner: false,
-      },
-      {
-        token_id: `token-no-${id}`,
-        outcome: 'NO',
-        price: noPrice.toString(),
-        winner: false,
-      },
-    ],
+    outcomes,
+    tokens,
     markets: id % 3 === 0 ? generateSubMarkets(id, 4) : [], // 每3个市场中有1个有子市场
     enable_order_book: true,
     order_price_minimum: 0.01,
@@ -180,7 +245,7 @@ function generateMockMarket(id: number, category: string): Market {
     rewards: null,
     cyom: false,
     comment_count: Math.floor(Math.random() * 100),
-    clob_token_ids: [`token-yes-${id}`, `token-no-${id}`],
+    clob_token_ids: clobTokenIds,
   }
 }
 
