@@ -11,6 +11,30 @@ import { useTranslation } from '../../i18n'
 
 type Tab = 'holders' | 'traders' | 'activity'
 
+// Generate random event description based on market title
+const generateEventDescription = (marketTitle: string): string => {
+  const descriptions = [
+    `本预测市场旨在判断${marketTitle}。市场参与者可基于公开信息、专家分析、历史数据等进行预测。结算将依据官方公布的最终结果进行，所有交易均在区块链上透明执行。市场采用自动做市商机制，确保持续流动性。参与者需注意市场波动风险，理性评估事件发生的概率。平台将在事件结束后24小时内完成结算，争议期为48小时。`,
+
+    `该事件市场专注于预测${marketTitle}的结果。基于去中心化预测市场协议，所有交易公开透明且不可篡改。市场价格实时反映群体智慧对事件概率的判断。参与者通过买卖YES/NO份额表达观点，价格发现机制确保市场效率。结算依据权威数据源，争议解决机制保障公平性。建议参与者充分研究相关信息后谨慎决策。`,
+
+    `此预测市场围绕${marketTitle}展开。市场运用预测市场理论，通过价格机制聚合分散信息，形成对未来事件的集体预测。所有份额在区块链上以ERC-1155代币形式存在，可自由交易。做市商提供持续流动性，价差反映市场深度。事件结束后，正确方向的份额将以1美元结算，错误方向归零。平台收取少量交易手续费以维持运营。`,
+
+    `本市场针对${marketTitle}进行概率预测。采用恒定函数做市商(CFMM)算法，确保任意规模订单都能即时成交。价格在0-1美元之间浮动，直接对应事件发生的隐含概率。参与者既可投机套利，也可对冲风险。所有交易数据链上可查，结算过程由智能合约自动执行。建议关注持仓集中度、换手率等指标辅助决策。`,
+
+    `该预测市场聚焦于${marketTitle}。基于Polygon网络构建，交易费用低廉且确认迅速。市场深度来源于专业做市商和散户流动性提供者。价格变化反映新信息的即时吸收和市场预期调整。支持限价单和市价单两种交易方式。结算依据预先约定的官方数据源，多签机制防止单点故障。参与前请仔细阅读市场规则和结算条款。`,
+
+    `本事件市场旨在预测${marketTitle}的最终走向。利用区块链技术实现去信任化交易结算，无需第三方托管。市场采用订单簿模式，买卖盘深度实时可见。大额交易可能产生滑点，建议分批执行。临近结算时波动加剧，需警惕操纵风险。平台提供历史数据分析工具，辅助用户做出理性判断。所有盈亏以USDC计价结算。`,
+
+    `此市场专注${marketTitle}的结果预测。整合链上链下数据，为参与者提供多维度决策参考。支持桌面端和移动端访问，7x24小时不间断交易。价格发现过程体现市场参与者的集体智慧。采用双边做市策略保证流动性充足。结算流程完全自动化，减少人为干预风险。建议设置止损点控制下行风险，理性对待市场波动。`,
+
+    `该预测市场围绕${marketTitle}设计。基于信息市场理论，价格信号传递预测信息。参与者通过交易行为表达对未来的判断，市场汇总形成概率共识。所有合约参数透明公开，结算规则预先确定。支持API接入方便量化交易者。大额持仓者动向可能影响短期价格走势。平台不对市场结果提供任何担保，请自行承担投资风险。`,
+  ]
+
+  // 随机选择一个描述模板
+  return descriptions[Math.floor(Math.random() * descriptions.length)]
+}
+
 // Mock data generators
 const generateMockHolders = () => {
   return Array.from({ length: 10 }, () => {
@@ -88,8 +112,21 @@ export function EventDetail() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<Tab>('activity')
   const [selectedSubMarketId, setSelectedSubMarketId] = useState<string | null>(null)
+  const [selectedOutcome, setSelectedOutcome] = useState<'yes' | 'no' | 'draw'>('yes')
   const [countdown, setCountdown] = useState<string>('')
-  const { t } = useTranslation()
+  const { t, locale } = useTranslation()
+
+  // Simple translation helper for market titles
+  // In production, this should be fetched from API or stored in database
+  const getTranslatedTitle = (originalTitle: string): string => {
+    // Mock translation mapping - in real app, this would come from API
+    const translations: Record<string, string> = {
+      'Will Bitcoin reach $150k by end of 2025?': '比特币会在2025年底达到15万美元吗？',
+      'Will Trump win 2024 election?': '特朗普会赢得2024年大选吗？',
+      // Add more translations as needed
+    }
+    return translations[originalTitle] || originalTitle
+  }
 
   // 获取市场数据
   const { data: market, isLoading: marketLoading } = useMarket(eventId)
@@ -108,17 +145,35 @@ export function EventDetail() {
   const { data: noOrderBook, isLoading: noOrderBookLoading } = useOrderBook(noTokenId)
   const { data: drawOrderBook, isLoading: drawOrderBookLoading } = useOrderBook(drawTokenId)
 
-  // 获取价格历史（使用 YES token 的价格历史）
-  const { data: priceHistory = [] } = usePriceHistory(yesTokenId, '1d', 100)
+  // 获取价格历史（根据 selectedOutcome 选择对应的 token）
+  const selectedTokenId = useMemo(() => {
+    if (selectedOutcome === 'yes') return yesTokenId
+    if (selectedOutcome === 'no') return noTokenId
+    if (selectedOutcome === 'draw') return drawTokenId
+    return yesTokenId
+  }, [selectedOutcome, yesTokenId, noTokenId, drawTokenId])
+
+  const { data: yesPriceHistory = [] } = usePriceHistory(yesTokenId, '1d', 100)
+  const { data: noPriceHistory = [] } = usePriceHistory(noTokenId, '1d', 100)
+  const { data: drawPriceHistory = [] } = usePriceHistory(drawTokenId, '1d', 100)
 
   // 准备图表数据
   const { chartData, isMultiLine } = useMemo(() => {
+    // 根据 selectedOutcome 选择对应的价格历史
+    const priceHistory = selectedOutcome === 'yes'
+      ? yesPriceHistory
+      : selectedOutcome === 'no'
+        ? noPriceHistory
+        : drawPriceHistory
+
     // 如果选择了"所有"且有子市场，生成多条折线数据
     if (selectedSubMarketId === null && market?.markets && market.markets.length > 0) {
       // 为每个子市场生成模拟价格历史
       const multiLineData = market.markets.map((subMarket) => {
-        const basePrice = subMarket.outcomePrices?.[0]
-          ? parseFloat(subMarket.outcomePrices[0])
+        // 根据 selectedOutcome 选择对应的价格索引
+        const priceIndex = selectedOutcome === 'yes' ? 0 : selectedOutcome === 'no' ? 1 : 2
+        const basePrice = subMarket.outcomePrices?.[priceIndex]
+          ? parseFloat(subMarket.outcomePrices[priceIndex])
           : 0.3 + Math.random() * 0.4
 
         // 生成该子市场的价格历史（基于主市场的时间戳）
@@ -133,7 +188,7 @@ export function EventDetail() {
       // 单个市场模式
       return { chartData: priceHistory, isMultiLine: false }
     }
-  }, [selectedSubMarketId, market?.markets, priceHistory])
+  }, [selectedSubMarketId, selectedOutcome, market?.markets, yesPriceHistory, noPriceHistory, drawPriceHistory])
 
   // Mock tab data
   const holders = useMemo(() => generateMockHolders(), [])
@@ -159,7 +214,7 @@ export function EventDetail() {
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
       const seconds = Math.floor((diff % (1000 * 60)) / 1000)
 
-      setCountdown(`${days.toString().padStart(2, '0')}:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`)
+      setCountdown(`${days}d:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`)
     }
 
     updateCountdown()
@@ -239,18 +294,47 @@ export function EventDetail() {
   const depthSkew = calculateDepthSkew(bidDepth, askDepth)
 
   const priceChange24h = yesOutcome?.price_change_percent || 0
+  const priceChange1h = (Math.random() - 0.5) * 10 // Mock 1h price change
 
-  // Market stats 数据
-  const stats = [
-    { label: t('stats.volume24h'), value: formatCurrency(volume24h), tooltip: t('eventDetail.tooltips.volume24h') },
-    { label: t('stats.openInterest'), value: formatCurrency(openInterest), tooltip: t('eventDetail.tooltips.openInterest') },
-    { label: t('stats.bidDepth'), value: formatCurrency(bidDepth), colorClass: 'text-success', tooltip: t('eventDetail.tooltips.bidDepth') },
-    { label: t('stats.askDepth'), value: formatCurrency(askDepth), colorClass: 'text-danger', tooltip: t('eventDetail.tooltips.askDepth') },
-    { label: t('stats.depthSkew'), value: formatPercent(depthSkew * 100), colorClass: depthSkew >= 0 ? 'text-success' : 'text-danger', tooltip: t('eventDetail.tooltips.depthSkew') },
-    { label: t('stats.priceChange24h'), value: formatPercent(priceChange24h), colorClass: priceChange24h >= 0 ? 'text-success' : 'text-danger', tooltip: t('eventDetail.tooltips.priceChange24h') },
-    { label: t('stats.yesPrice'), value: `${(yesPrice * 100).toFixed(1)}¢`, colorClass: 'text-success', tooltip: t('eventDetail.tooltips.yesPrice') },
-    { label: t('stats.noPrice'), value: `${(noPrice * 100).toFixed(1)}¢`, colorClass: 'text-danger', tooltip: t('eventDetail.tooltips.noPrice') },
+  // 数据概览 - 12个核心指标
+  const overviewStats = [
+    { label: t('eventDetail.totalOpenInterest'), value: formatCurrency(openInterest), tooltip: t('eventDetail.tooltips.totalOpenInterest') },
+    { label: t('eventDetail.volume24h'), value: formatCurrency(volume24h), tooltip: t('eventDetail.tooltips.volume24h') },
+    { label: t('eventDetail.turnoverRate'), value: `${((volume24h / (openInterest || 1)) * 100).toFixed(1)}%`, tooltip: t('eventDetail.tooltips.turnoverRate') },
+    { label: t('eventDetail.activeTraders'), value: Math.floor(Math.random() * 500 + 100).toString(), tooltip: t('eventDetail.tooltips.activeTraders') },
+    { label: t('eventDetail.newTraders'), value: Math.floor(Math.random() * 100 + 20).toString(), tooltip: t('eventDetail.tooltips.newTraders') },
+    { label: t('eventDetail.avgSpread'), value: `${(Math.random() * 2 + 0.5).toFixed(2)}¢`, tooltip: t('eventDetail.tooltips.avgSpread') },
+    { label: t('eventDetail.volatility'), value: `${(Math.random() * 15 + 5).toFixed(1)}%`, tooltip: t('eventDetail.tooltips.volatility') },
+    { label: t('eventDetail.whaleConcentration'), value: `${(Math.random() * 30 + 20).toFixed(1)}%`, tooltip: t('eventDetail.tooltips.whaleConcentration') },
+    { label: t('eventDetail.liquidityConcentration'), value: `${(Math.random() * 40 + 30).toFixed(1)}%`, tooltip: t('eventDetail.tooltips.liquidityConcentration') },
+    { label: t('eventDetail.lateVolumeSpike'), value: `${(Math.random() * 200 - 50).toFixed(0)}%`, colorClass: Math.random() > 0.5 ? 'text-warning' : 'text-gray-300', tooltip: t('eventDetail.tooltips.lateVolumeSpike') },
+    { label: t('eventDetail.disputeRisk'), value: `${(Math.random() * 20).toFixed(1)}%`, colorClass: Math.random() > 0.7 ? 'text-danger' : 'text-success', tooltip: t('eventDetail.tooltips.disputeRisk') },
+    { label: t('eventDetail.creditScore'), value: `${(Math.random() * 30 + 70).toFixed(0)}/100`, colorClass: 'text-primary', tooltip: t('eventDetail.tooltips.creditScore') },
   ]
+
+  // YES/NO/DRAW 单腿数据 - 16个指标 (每个方向独立)
+  const createLegStats = (price: number, priceChange1h: number, priceChange24h: number, legVolume: number, legOI: number) => [
+    { label: t('eventDetail.price'), value: `${(price * 100).toFixed(1)}¢`, tooltip: t('eventDetail.tooltips.price') },
+    { label: t('eventDetail.priceChange1h'), value: formatPercent(priceChange1h), colorClass: priceChange1h >= 0 ? 'text-success' : 'text-danger', tooltip: t('eventDetail.tooltips.priceChange1h') },
+    { label: t('eventDetail.priceChange24h'), value: formatPercent(priceChange24h), colorClass: priceChange24h >= 0 ? 'text-success' : 'text-danger', tooltip: t('eventDetail.tooltips.priceChange24h') },
+    { label: t('eventDetail.outcomeVolume24h'), value: formatCurrency(legVolume), tooltip: t('eventDetail.tooltips.outcomeVolume24h') },
+    { label: t('eventDetail.outcomeOI'), value: formatCurrency(legOI), tooltip: t('eventDetail.tooltips.outcomeOI') },
+    { label: t('eventDetail.legTurnoverRate'), value: `${((legVolume / (legOI || 1)) * 100).toFixed(1)}%`, tooltip: t('eventDetail.tooltips.legTurnoverRate') },
+    { label: t('eventDetail.bidDepth'), value: formatCurrency(bidDepth * 0.6), colorClass: 'text-success', tooltip: t('eventDetail.tooltips.bidDepth') },
+    { label: t('eventDetail.askDepth'), value: formatCurrency(askDepth * 0.6), colorClass: 'text-danger', tooltip: t('eventDetail.tooltips.askDepth') },
+    { label: t('eventDetail.depthSkew'), value: formatPercent(depthSkew * 100), colorClass: depthSkew >= 0 ? 'text-success' : 'text-danger', tooltip: t('eventDetail.tooltips.depthSkew') },
+    { label: t('eventDetail.liquidityGap'), value: `${(Math.random() * 5).toFixed(1)}¢`, tooltip: t('eventDetail.tooltips.liquidityGap') },
+    { label: t('eventDetail.liquidityWalls'), value: `${(Math.random() * 3 + 1).toFixed(0)} walls`, tooltip: t('eventDetail.tooltips.liquidityWalls') },
+    { label: t('eventDetail.vwapDeviation'), value: `${((Math.random() - 0.5) * 4).toFixed(2)}¢`, colorClass: Math.random() > 0.5 ? 'text-warning' : 'text-gray-300', tooltip: t('eventDetail.tooltips.vwapDeviation') },
+    { label: t('eventDetail.smartMoneyRatio'), value: `${(Math.random() * 40 + 20).toFixed(1)}%`, tooltip: t('eventDetail.tooltips.smartMoneyRatio') },
+    { label: t('eventDetail.whaleRatio'), value: `${(Math.random() * 35 + 15).toFixed(1)}%`, tooltip: t('eventDetail.tooltips.whaleRatio') },
+    { label: t('eventDetail.manipulationRisk'), value: `${(Math.random() * 30).toFixed(1)}%`, colorClass: Math.random() > 0.7 ? 'text-danger' : 'text-success', tooltip: t('eventDetail.tooltips.manipulationRisk') },
+    { label: t('eventDetail.legConfidence'), value: `${(Math.random() * 25 + 75).toFixed(0)}/100`, colorClass: 'text-primary', tooltip: t('eventDetail.tooltips.legConfidence') },
+  ]
+
+  const yesStats = createLegStats(yesPrice, priceChange1h, priceChange24h, volume24h * 0.6, openInterest * 0.6)
+  const noStats = createLegStats(noPrice, -priceChange1h * 0.8, -priceChange24h * 0.9, volume24h * 0.4, openInterest * 0.4)
+  const drawStats = market.outcomes.length === 3 ? createLegStats(0.05, Math.random() * 2 - 1, Math.random() * 3 - 1.5, volume24h * 0.1, openInterest * 0.05) : []
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'activity', label: t('tabs.activity') },
@@ -275,18 +359,17 @@ export function EventDetail() {
           {/* Title and Tags */}
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-gray-100 mb-2">
-              {market.question}
+              {locale === 'zh' ? getTranslatedTitle(market.question) : market.question}
             </h1>
             <div className="text-sm text-gray-400 mb-3">
-              {selectedSubMarket ? selectedSubMarket.question : market.question}
+              {locale === 'zh' ? `原文：${market.question}` : (selectedSubMarket ? selectedSubMarket.question : market.question)}
             </div>
 
             <div className="flex items-center gap-3">
               {/* Countdown Timer */}
               <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-dark-700 dark:bg-dark-700 light:bg-gray-100 border border-dark-600 dark:border-dark-600 light:border-gray-300">
-                <span className="text-xs text-gray-400">{t('market.endTime')}:</span>
                 <span className="text-xs font-mono font-semibold text-gray-100 dark:text-gray-100 light:text-gray-900 tabular-nums">
-                  {countdown || '00:00:00:00'}
+                  {countdown || '0d:00:00:00'}
                 </span>
               </div>
 
@@ -316,7 +399,7 @@ export function EventDetail() {
               <>
                 <button
                   onClick={() => setSelectedSubMarketId(null)}
-                  className={`w-full px-3 py-2 text-sm rounded-lg transition-all cursor-pointer active:scale-95 text-left ${
+                  className={`w-full px-3 py-2.5 text-sm rounded-lg transition-all cursor-pointer active:scale-95 text-left ${
                     selectedSubMarketId === null
                       ? 'bg-primary !text-white font-medium'
                       : 'bg-dark-700 dark:bg-dark-700 light:bg-gray-100 text-gray-300 dark:text-gray-300 light:text-gray-700 hover:bg-dark-600 dark:hover:bg-dark-600 light:hover:bg-gray-200'
@@ -324,19 +407,34 @@ export function EventDetail() {
                 >
                   {t('market.allSubEvents')}
                 </button>
-                {market.markets.slice(0, 6).map((subMarket, idx) => (
-                  <button
-                    key={subMarket.id}
-                    onClick={() => setSelectedSubMarketId(subMarket.id)}
-                    className={`w-full px-3 py-2 text-sm rounded-lg transition-all cursor-pointer active:scale-95 text-left ${
-                      selectedSubMarketId === subMarket.id
-                        ? 'bg-primary !text-white font-medium'
-                        : 'bg-dark-700 dark:bg-dark-700 light:bg-gray-100 text-gray-300 dark:text-gray-300 light:text-gray-700 hover:bg-dark-600 dark:hover:bg-dark-600 light:hover:bg-gray-200'
-                    }`}
-                  >
-                    {t('market.subEvent')} {idx + 1}
-                  </button>
-                ))}
+                {market.markets.slice(0, 6).map((subMarket, idx) => {
+                  const yesPrice = subMarket.outcomePrices?.[0] ? parseFloat(subMarket.outcomePrices[0]) : 0.5
+                  const noPrice = subMarket.outcomePrices?.[1] ? parseFloat(subMarket.outcomePrices[1]) : 0.5
+
+                  return (
+                    <button
+                      key={subMarket.id}
+                      onClick={() => setSelectedSubMarketId(subMarket.id)}
+                      className={`w-full px-3 py-2.5 text-sm rounded-lg transition-all cursor-pointer active:scale-95 text-left ${
+                        selectedSubMarketId === subMarket.id
+                          ? 'bg-primary !text-white font-medium'
+                          : 'bg-dark-700 dark:bg-dark-700 light:bg-gray-100 text-gray-300 dark:text-gray-300 light:text-gray-700 hover:bg-dark-600 dark:hover:bg-dark-600 light:hover:bg-gray-200'
+                      }`}
+                    >
+                      <div className="font-medium mb-1.5">
+                        {t('market.subEvent')} {idx + 1}
+                      </div>
+                      <div className="flex items-center gap-3 text-xs">
+                        <span className={selectedSubMarketId === subMarket.id ? 'text-green-200' : 'text-green-400'}>
+                          Yes {(yesPrice * 100).toFixed(1)}¢
+                        </span>
+                        <span className={selectedSubMarketId === subMarket.id ? 'text-red-200' : 'text-red-400'}>
+                          No {(noPrice * 100).toFixed(1)}¢
+                        </span>
+                      </div>
+                    </button>
+                  )
+                })}
               </>
             ) : (
               <div className="text-xs text-gray-500 text-center py-4">
@@ -357,6 +455,10 @@ export function EventDetail() {
             data={chartData}
             height={400}
             multiLine={isMultiLine}
+            showOutcomeSelector={!isMultiLine}
+            selectedOutcome={selectedOutcome}
+            onOutcomeChange={setSelectedOutcome}
+            hasDrawOutcome={!!drawTokenId}
           />
         </motion.div>
 
@@ -371,15 +473,15 @@ export function EventDetail() {
           <div className="card p-4">
             <h3 className="text-sm font-semibold text-gray-200 mb-2">{t('market.description')}</h3>
             <p className="text-xs text-gray-400 leading-relaxed">
-              {t('market.descriptionPlaceholder')}
+              {generateEventDescription(market.question)}
             </p>
           </div>
 
-          {/* Data Overview */}
+          {/* Data Overview - 12个核心指标 */}
           <div className="card p-4">
             <h3 className="text-sm font-semibold text-gray-200 mb-3">{t('market.dataOverview')}</h3>
             <div className="grid grid-cols-4 gap-2">
-              {stats.slice(0, 4).map((stat, i) => (
+              {overviewStats.map((stat, i) => (
                 <DataItemWithTooltip
                   key={i}
                   label={stat.label}
@@ -421,11 +523,11 @@ export function EventDetail() {
               )}
             </div>
 
-            {/* Yes Data Stats */}
+            {/* Yes Data Stats - 16个指标 */}
             <div className="w-full">
               <h3 className="text-sm font-semibold text-gray-200 mb-3">{t('market.yesData')}</h3>
-              <div className={`grid gap-2 ${market.outcomes.length === 3 ? 'grid-cols-2' : 'grid-cols-4'}`}>
-                {stats.slice(0, market.outcomes.length === 3 ? 6 : 8).map((stat, i) => (
+              <div className="grid gap-2 grid-cols-4">
+                {yesStats.map((stat, i) => (
                   <DataItemWithTooltip
                     key={i}
                     label={stat.label}
@@ -467,11 +569,11 @@ export function EventDetail() {
                 )}
               </div>
 
-              {/* Draw Data Stats */}
+              {/* Draw Data Stats - 16个指标 */}
               <div className="w-full">
                 <h3 className="text-sm font-semibold text-gray-200 mb-3">{t('market.drawData')}</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {stats.slice(0, 6).map((stat, i) => (
+                <div className="grid grid-cols-4 gap-2">
+                  {drawStats.map((stat, i) => (
                     <DataItemWithTooltip
                       key={i}
                       label={stat.label}
@@ -513,11 +615,11 @@ export function EventDetail() {
               )}
             </div>
 
-            {/* No Data Stats */}
+            {/* No Data Stats - 16个指标 */}
             <div className="w-full">
               <h3 className="text-sm font-semibold text-gray-200 mb-3">{t('market.noData')}</h3>
-              <div className={`grid gap-2 ${market.outcomes.length === 3 ? 'grid-cols-2' : 'grid-cols-4'}`}>
-                {stats.slice(0, market.outcomes.length === 3 ? 6 : 8).map((stat, i) => (
+              <div className="grid gap-2 grid-cols-4">
+                {noStats.map((stat, i) => (
                   <DataItemWithTooltip
                     key={i}
                     label={stat.label}

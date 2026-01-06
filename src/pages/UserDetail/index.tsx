@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useState, useMemo } from 'react'
 import { useUserProfile } from '../../hooks'
@@ -6,6 +6,7 @@ import { ProfitChart, RadarChart } from '../../components/charts'
 import type { RadarDataPoint } from '../../components/charts'
 import { formatDate, formatTimestamp } from '../../utils/format'
 import { useTranslation } from '../../i18n'
+import { mockLeaderboardData } from '../../api/mock/leaderboard'
 
 type Tab = 'holdings' | 'trades' | 'activity'
 type TimeRange = '1d' | '7d' | '30d' | 'all'
@@ -133,10 +134,35 @@ const generateMockActivity = () => {
 
 export function UserDetail() {
   const { t } = useTranslation()
-  const { address } = useParams<{ address: string }>()
+  const { address: urlAddress } = useParams<{ address: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const [activeTab, setActiveTab] = useState<Tab>('holdings')
   const [timeRange, setTimeRange] = useState<TimeRange>('1d')
+
+  // 默认地址（当没有URL参数时使用）
+  const DEFAULT_ADDRESS = '0x1234567890abcdef1234567890abcdef12345678'
+
+  // 使用URL地址或默认地址
+  const address = urlAddress || DEFAULT_ADDRESS
+
+  // 检查是否在 Portfolio 页面（没有地址参数）
+  const isPortfolioPage = location.pathname === '/portfolio'
+
+  // 获取前10个排行榜用户地址用于选择器
+  const availableAddresses = useMemo(() => [
+    DEFAULT_ADDRESS,
+    ...mockLeaderboardData.slice(0, 9).map(user => user.address)
+  ], [])
+
+  // 处理地址切换
+  const handleAddressChange = (newAddress: string) => {
+    if (isPortfolioPage) {
+      navigate(`/portfolio/${newAddress}`)
+    } else {
+      navigate(`/user/${newAddress}`)
+    }
+  }
 
   // Get user profile data
   const { data: profile, isLoading } = useUserProfile(address)
@@ -226,9 +252,23 @@ export function UserDetail() {
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-base">
             😊
           </div>
-          <div className="font-mono text-gray-400 text-xs">
-            {profile.address}
-          </div>
+          {isPortfolioPage ? (
+            <select
+              value={address}
+              onChange={(e) => handleAddressChange(e.target.value)}
+              className="font-mono text-gray-300 text-xs bg-dark-700 dark:bg-dark-700 light:bg-gray-100 border border-dark-600 dark:border-dark-600 light:border-gray-300 rounded px-3 py-1.5 cursor-pointer hover:bg-dark-600 dark:hover:bg-dark-600 light:hover:bg-gray-200 transition-colors"
+            >
+              {availableAddresses.map((addr, index) => (
+                <option key={addr} value={addr}>
+                  {index === 0 ? `${addr.slice(0, 6)}...${addr.slice(-4)} (默认)` : `${addr.slice(0, 6)}...${addr.slice(-4)}`}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div className="font-mono text-gray-400 text-xs">
+              {profile.address}
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2">

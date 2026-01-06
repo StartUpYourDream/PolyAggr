@@ -4,6 +4,8 @@ import { Trending } from './pages/Trending'
 import { EventDetail } from './pages/EventDetail'
 import { UserDetail } from './pages/UserDetail'
 import { Search } from './pages/Search'
+import { Leaderboard } from './pages/Leaderboard'
+import { Dashboard } from './pages/Dashboard'
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +31,22 @@ export const router = createBrowserRouter([
       {
         path: 'search',
         element: <Search />,
+      },
+      {
+        path: 'leaderboard',
+        element: <Leaderboard />,
+      },
+      {
+        path: 'dashboard',
+        element: <Dashboard />,
+      },
+      {
+        path: 'portfolio',
+        element: <UserDetail />,
+      },
+      {
+        path: 'portfolio/:address',
+        element: <UserDetail />,
       },
     ],
   },

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import { useI18n, useTranslation } from '../../i18n'
 import { useTheme } from '../../stores/theme'
@@ -11,6 +11,7 @@ export function Header() {
   const [searchHistory, setSearchHistory] = useState<string[]>([])
   const [showDropdown, setShowDropdown] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
   const dropdownRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const { t } = useTranslation()
@@ -76,17 +77,61 @@ export function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg dark:bg-dark-800/80 light:bg-white/80">
-      <div className="max-w-[1800px] mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="max-w-[1800px] mx-auto px-6 h-16 flex items-center gap-6">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2 flex-shrink-0">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <span className="text-white font-bold text-lg">P</span>
           </div>
           <span className="font-semibold text-xl text-gray-100 dark:text-gray-100 light:text-gray-900">ProbData</span>
         </Link>
 
+        {/* Navigation Tabs */}
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <Link
+            to="/"
+            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${
+              location.pathname === '/' || location.pathname === '/trending' || location.pathname.startsWith('/event/')
+                ? 'bg-primary text-white'
+                : 'text-gray-400 dark:text-gray-400 light:text-gray-600 hover:text-gray-100 dark:hover:text-gray-100 light:hover:text-gray-900 hover:bg-dark-700/50 dark:hover:bg-dark-700/50 light:hover:bg-gray-100'
+            }`}
+          >
+            {t('nav.trending')}
+          </Link>
+          <Link
+            to="/leaderboard"
+            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${
+              location.pathname === '/leaderboard'
+                ? 'bg-primary text-white'
+                : 'text-gray-400 dark:text-gray-400 light:text-gray-600 hover:text-gray-100 dark:hover:text-gray-100 light:hover:text-gray-900 hover:bg-dark-700/50 dark:hover:bg-dark-700/50 light:hover:bg-gray-100'
+            }`}
+          >
+            {t('nav.leaderboard')}
+          </Link>
+          <Link
+            to="/dashboard"
+            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${
+              location.pathname === '/dashboard'
+                ? 'bg-primary text-white'
+                : 'text-gray-400 dark:text-gray-400 light:text-gray-600 hover:text-gray-100 dark:hover:text-gray-100 light:hover:text-gray-900 hover:bg-dark-700/50 dark:hover:bg-dark-700/50 light:hover:bg-gray-100'
+            }`}
+          >
+            {t('nav.dashboard')}
+          </Link>
+          <Link
+            to="/portfolio"
+            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${
+              location.pathname.startsWith('/portfolio') || location.pathname.startsWith('/user/')
+                ? 'bg-primary text-white'
+                : 'text-gray-400 dark:text-gray-400 light:text-gray-600 hover:text-gray-100 dark:hover:text-gray-100 light:hover:text-gray-900 hover:bg-dark-700/50 dark:hover:bg-dark-700/50 light:hover:bg-gray-100'
+            }`}
+          >
+            {t('nav.portfolio')}
+          </Link>
+        </div>
+
         {/* Search Bar */}
-        <form onSubmit={handleSearch} className="flex-1 max-w-xl mx-8 relative">
+        <form onSubmit={handleSearch} className="flex-1 max-w-xl relative">
           <div className="relative" ref={dropdownRef}>
             <input
               ref={inputRef}
@@ -150,15 +195,8 @@ export function Header() {
           </div>
         </form>
 
-        {/* Navigation */}
-        <nav className="flex items-center gap-4">
-          <Link
-            to="/trending"
-            className="text-gray-400 dark:text-gray-400 light:text-gray-600 hover:text-gray-100 dark:hover:text-gray-100 light:hover:text-gray-900 transition-colors text-sm font-medium"
-          >
-            {t('nav.trending')}
-          </Link>
-
+        {/* Right Side Actions */}
+        <div className="flex items-center gap-4 flex-shrink-0">
           {/* Theme Switcher */}
           <button
             onClick={toggleTheme}
@@ -216,7 +254,7 @@ export function Header() {
           >
             {t('market.tradeOn')} →
           </a>
-        </nav>
+        </div>
       </div>
     </header>
   )

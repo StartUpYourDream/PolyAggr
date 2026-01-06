@@ -12,6 +12,22 @@ export function formatCurrency(value: number): string {
 }
 
 /**
+ * 格式化盈亏金额（带正负号）
+ */
+export function formatPnL(value: number): string {
+  const sign = value >= 0 ? '+' : '-'
+  const absValue = Math.abs(value)
+
+  if (absValue >= 1_000_000) {
+    return `${sign}$${(absValue / 1_000_000).toFixed(2)}M`
+  }
+  if (absValue >= 1_000) {
+    return `${sign}$${(absValue / 1_000).toFixed(1)}K`
+  }
+  return `${sign}$${absValue.toFixed(0)}`
+}
+
+/**
  * 格式化百分比
  */
 export function formatPercent(value: number, decimals = 1): string {

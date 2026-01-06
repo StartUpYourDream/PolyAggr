@@ -17,13 +17,21 @@ interface PriceChartProps {
   height?: number
   multiLine?: boolean  // Whether to show multiple lines
   lineColors?: string[]  // Colors for each line
+  showOutcomeSelector?: boolean  // Whether to show YES/NO/DRAW selector
+  selectedOutcome?: 'yes' | 'no' | 'draw'  // Currently selected outcome
+  onOutcomeChange?: (outcome: 'yes' | 'no' | 'draw') => void  // Callback when outcome changes
+  hasDrawOutcome?: boolean  // Whether the market has a draw outcome
 }
 
 export function PriceChart({
   data,
   height = 400,
   multiLine = false,
-  lineColors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
+  lineColors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'],
+  showOutcomeSelector = false,
+  selectedOutcome = 'yes',
+  onOutcomeChange,
+  hasDrawOutcome = false
 }: PriceChartProps) {
   const { t } = useTranslation()
   const [selectedInterval, setSelectedInterval] = useState('1d')
@@ -188,7 +196,48 @@ export function PriceChart({
 
   return (
     <div>
-      <div className="flex items-center justify-end mb-4">
+      <div className="flex items-center justify-between mb-4">
+        {/* Left side: Outcome selector (if enabled) */}
+        <div className="flex items-center gap-2">
+          {showOutcomeSelector && onOutcomeChange && (
+            <>
+              <button
+                onClick={() => onOutcomeChange('yes')}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                  selectedOutcome === 'yes'
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/50'
+                    : 'bg-dark-700 dark:bg-dark-700 light:bg-gray-100 text-gray-400 dark:text-gray-400 light:text-gray-600 hover:bg-dark-600 dark:hover:bg-dark-600 light:hover:bg-gray-200'
+                }`}
+              >
+                Yes
+              </button>
+              <button
+                onClick={() => onOutcomeChange('no')}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                  selectedOutcome === 'no'
+                    ? 'bg-red-500/20 text-red-400 border border-red-500/50'
+                    : 'bg-dark-700 dark:bg-dark-700 light:bg-gray-100 text-gray-400 dark:text-gray-400 light:text-gray-600 hover:bg-dark-600 dark:hover:bg-dark-600 light:hover:bg-gray-200'
+                }`}
+              >
+                No
+              </button>
+              {hasDrawOutcome && (
+                <button
+                  onClick={() => onOutcomeChange('draw')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                    selectedOutcome === 'draw'
+                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'
+                      : 'bg-dark-700 dark:bg-dark-700 light:bg-gray-100 text-gray-400 dark:text-gray-400 light:text-gray-600 hover:bg-dark-600 dark:hover:bg-dark-600 light:hover:bg-gray-200'
+                  }`}
+                >
+                  Draw
+                </button>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Right side: Time interval selector */}
         <div className="flex gap-2">
           {intervals.map((interval) => (
             <button

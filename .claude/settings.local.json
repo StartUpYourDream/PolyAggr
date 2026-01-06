@@ -12,7 +12,9 @@
       "Bash(npx tsc:*)",
       "Bash(while read file)",
       "Bash(do if grep -l '[一-龥]' \"$file\")",
-      "Bash(then echo \"$file has Chinese text\" fi done)"
+      "Bash(then echo \"$file has Chinese text\" fi done)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)"
     ]
   }
 }
