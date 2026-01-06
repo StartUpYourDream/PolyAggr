@@ -196,14 +196,14 @@ export function PriceChart({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-4">
         {/* Left side: Outcome selector (if enabled) */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {showOutcomeSelector && onOutcomeChange && (
             <>
               <button
                 onClick={() => onOutcomeChange('yes')}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                className={`px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-all ${
                   selectedOutcome === 'yes'
                     ? 'bg-green-500/20 text-green-400 border border-green-500/50'
                     : 'bg-dark-700 dark:bg-dark-700 light:bg-gray-100 text-gray-400 dark:text-gray-400 light:text-gray-600 hover:bg-dark-600 dark:hover:bg-dark-600 light:hover:bg-gray-200'
@@ -213,7 +213,7 @@ export function PriceChart({
               </button>
               <button
                 onClick={() => onOutcomeChange('no')}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                className={`px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-all ${
                   selectedOutcome === 'no'
                     ? 'bg-red-500/20 text-red-400 border border-red-500/50'
                     : 'bg-dark-700 dark:bg-dark-700 light:bg-gray-100 text-gray-400 dark:text-gray-400 light:text-gray-600 hover:bg-dark-600 dark:hover:bg-dark-600 light:hover:bg-gray-200'
@@ -224,7 +224,7 @@ export function PriceChart({
               {hasDrawOutcome && (
                 <button
                   onClick={() => onOutcomeChange('draw')}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                  className={`px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-all ${
                     selectedOutcome === 'draw'
                       ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'
                       : 'bg-dark-700 dark:bg-dark-700 light:bg-gray-100 text-gray-400 dark:text-gray-400 light:text-gray-600 hover:bg-dark-600 dark:hover:bg-dark-600 light:hover:bg-gray-200'
@@ -238,12 +238,12 @@ export function PriceChart({
         </div>
 
         {/* Right side: Time interval selector */}
-        <div className="flex gap-2">
+        <div className="flex gap-1 sm:gap-2 flex-wrap">
           {intervals.map((interval) => (
             <button
               key={interval}
               onClick={() => setSelectedInterval(interval)}
-              className={`px-3 py-1 text-xs rounded-md transition-all cursor-pointer active:scale-95 ${
+              className={`px-2 sm:px-3 py-1 text-xs rounded-md transition-all cursor-pointer active:scale-95 ${
                 selectedInterval === interval
                   ? 'bg-primary !text-white'
                   : 'bg-dark-700 dark:bg-dark-700 light:bg-gray-200 text-gray-400 dark:text-gray-400 light:text-gray-700 hover:bg-dark-600 dark:hover:bg-dark-600 light:hover:bg-gray-300 hover:text-gray-100 dark:hover:text-gray-100 light:hover:text-gray-900'

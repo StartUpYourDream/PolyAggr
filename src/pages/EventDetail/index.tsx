@@ -389,12 +389,12 @@ export function EventDetail() {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1 }}
-          className="card p-4"
+          className="card p-4 h-[532px] flex flex-col"
         >
           <h3 className="text-sm font-semibold text-gray-200 mb-3">{t('market.subEvents')}</h3>
 
           {/* Sub-event buttons */}
-          <div className="space-y-2">
+          <div className="space-y-2 overflow-y-auto flex-1 pr-2">
             {market.markets && market.markets.length > 0 ? (
               <>
                 <button
@@ -407,7 +407,7 @@ export function EventDetail() {
                 >
                   {t('market.allSubEvents')}
                 </button>
-                {market.markets.slice(0, 6).map((subMarket, idx) => {
+                {market.markets.map((subMarket, idx) => {
                   const yesPrice = subMarket.outcomePrices?.[0] ? parseFloat(subMarket.outcomePrices[0]) : 0.5
                   const noPrice = subMarket.outcomePrices?.[1] ? parseFloat(subMarket.outcomePrices[1]) : 0.5
 
@@ -467,18 +467,20 @@ export function EventDetail() {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
-          className="space-y-4"
+          className="h-[532px] flex flex-col gap-4"
         >
           {/* Event Description */}
-          <div className="card p-4">
+          <div className="card p-4 flex-1 flex flex-col min-h-0">
             <h3 className="text-sm font-semibold text-gray-200 mb-2">{t('market.description')}</h3>
-            <p className="text-xs text-gray-400 leading-relaxed">
-              {generateEventDescription(market.question)}
-            </p>
+            <div className="overflow-y-auto flex-1 pr-2">
+              <p className="text-xs text-gray-400 leading-relaxed">
+                {generateEventDescription(market.question)}
+              </p>
+            </div>
           </div>
 
           {/* Data Overview - 12个核心指标 */}
-          <div className="card p-4">
+          <div className="card p-4 flex-shrink-0">
             <h3 className="text-sm font-semibold text-gray-200 mb-3">{t('market.dataOverview')}</h3>
             <div className="grid grid-cols-4 gap-2">
               {overviewStats.map((stat, i) => (
@@ -504,7 +506,11 @@ export function EventDetail() {
           transition={{ delay: 0.25 }}
           className="card p-4"
         >
-          <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-3">
+          <div className={`grid grid-cols-1 gap-3 ${
+            market.outcomes.length === 3
+              ? 'md:grid-cols-[70px_1fr] lg:grid-cols-[80px_1fr] xl:grid-cols-[100px_1fr]'
+              : 'md:grid-cols-[140px_1fr] lg:grid-cols-[160px_1fr] xl:grid-cols-[200px_1fr]'
+          }`}>
             {/* YES OrderBook */}
             <div>
               <h2 className="text-sm font-semibold text-success mb-3">{t('market.yesOrderBook')}</h2>
@@ -526,7 +532,7 @@ export function EventDetail() {
             {/* Yes Data Stats - 16个指标 */}
             <div className="w-full">
               <h3 className="text-sm font-semibold text-gray-200 mb-3">{t('market.yesData')}</h3>
-              <div className="grid gap-2 grid-cols-4">
+              <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
                 {yesStats.map((stat, i) => (
                   <DataItemWithTooltip
                     key={i}
@@ -550,7 +556,11 @@ export function EventDetail() {
             transition={{ delay: 0.275 }}
             className="card p-4"
           >
-            <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-3">
+            <div className={`grid grid-cols-1 gap-3 ${
+              market.outcomes.length === 3
+                ? 'md:grid-cols-[70px_1fr] lg:grid-cols-[80px_1fr] xl:grid-cols-[100px_1fr]'
+                : 'md:grid-cols-[140px_1fr] lg:grid-cols-[160px_1fr] xl:grid-cols-[200px_1fr]'
+            }`}>
               {/* DRAW OrderBook */}
               <div>
                 <h2 className="text-sm font-semibold text-primary mb-3">{t('market.drawOrderBook')}</h2>
@@ -572,7 +582,7 @@ export function EventDetail() {
               {/* Draw Data Stats - 16个指标 */}
               <div className="w-full">
                 <h3 className="text-sm font-semibold text-gray-200 mb-3">{t('market.drawData')}</h3>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
                   {drawStats.map((stat, i) => (
                     <DataItemWithTooltip
                       key={i}
@@ -596,7 +606,11 @@ export function EventDetail() {
           transition={{ delay: 0.3 }}
           className="card p-4"
         >
-          <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-3">
+          <div className={`grid grid-cols-1 gap-3 ${
+            market.outcomes.length === 3
+              ? 'md:grid-cols-[70px_1fr] lg:grid-cols-[80px_1fr] xl:grid-cols-[100px_1fr]'
+              : 'md:grid-cols-[140px_1fr] lg:grid-cols-[160px_1fr] xl:grid-cols-[200px_1fr]'
+          }`}>
             {/* NO OrderBook */}
             <div>
               <h2 className="text-sm font-semibold text-danger mb-3">{t('market.noOrderBookTitle')}</h2>
@@ -618,7 +632,7 @@ export function EventDetail() {
             {/* No Data Stats - 16个指标 */}
             <div className="w-full">
               <h3 className="text-sm font-semibold text-gray-200 mb-3">{t('market.noData')}</h3>
-              <div className="grid gap-2 grid-cols-4">
+              <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
                 {noStats.map((stat, i) => (
                   <DataItemWithTooltip
                     key={i}
