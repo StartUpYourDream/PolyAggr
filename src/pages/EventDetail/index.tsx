@@ -145,14 +145,7 @@ export function EventDetail() {
   const { data: noOrderBook, isLoading: noOrderBookLoading } = useOrderBook(noTokenId)
   const { data: drawOrderBook, isLoading: drawOrderBookLoading } = useOrderBook(drawTokenId)
 
-  // 获取价格历史（根据 selectedOutcome 选择对应的 token）
-  const selectedTokenId = useMemo(() => {
-    if (selectedOutcome === 'yes') return yesTokenId
-    if (selectedOutcome === 'no') return noTokenId
-    if (selectedOutcome === 'draw') return drawTokenId
-    return yesTokenId
-  }, [selectedOutcome, yesTokenId, noTokenId, drawTokenId])
-
+  // 获取价格历史
   const { data: yesPriceHistory = [] } = usePriceHistory(yesTokenId, '1d', 100)
   const { data: noPriceHistory = [] } = usePriceHistory(noTokenId, '1d', 100)
   const { data: drawPriceHistory = [] } = usePriceHistory(drawTokenId, '1d', 100)
